@@ -1,0 +1,26 @@
+    current_annot.set_color(color)
+    # Shade area between entry price and current price
+    ax.collections.clear()  # clear previous fills
+    if prices[-1] > ENTRY_PRICE:
+        ax.fill_between(times, ENTRY_PRICE, prices, where=(np.array(prices) >= ENTRY_PRICE),
+                        color='green', alpha=0.1)
+    elif prices[-1] < ENTRY_PRICE:
+        ax.fill_between(times, prices, ENTRY_PRICE, where=(np.array(prices) <= ENTRY_PRICE),
+                        color='red', alpha=0.1)
+    return line_price, entry_annot, current_annot, pl_annot
+anim = FuncAnimation(fig, update, interval=UPDATE_INTERVAL, blit=False)
+if SAVE_ANIMATION:
+    # Save animation as mp4 or gif depending on extension
+    ext = SAVE_FILENAME.split('.')[-1].lower()
+    print(f"Saving animation to {SAVE_FILENAME} ... this may take a moment.")
+    if ext == 'mp4':
+        # Requires ffmpeg installed and imageio-ffmpeg package
+        anim.save(SAVE_FILENAME, writer='ffmpeg', fps=1000/UPDATE_INTERVAL)
+    elif ext == 'gif':
+        # Requires pillow
+        anim.save(SAVE_FILENAME, writer='pillow', fps=1000/UPDATE_INTERVAL)
+    else:
+        print("Unsupported file extension for saving animation. Use .mp4 or .gif")
+    print("Save complete.")
+plt.tight_layout()
+plt.show()

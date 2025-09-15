@@ -1,0 +1,765 @@
+[
+    {
+        "name": "deepakj",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "Abhimanyu",
+        "password": "dropadi",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "raavan",
+        "password": "mahadev",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "raavan",
+        "password": "mahadev",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "shelly",
+        "password": "fatherj8i",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "aryangupta",
+        "password": "vanshika",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "chetan",
+        "password": "chetan",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "SHREE RAM",
+        "password": "sitaram",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0,
+            "Beamer": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100,
+        "signup_date": "2025-08-27"
+    },
+    {
+        "name": "deepaksinghjeena",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0,
+            "Beamer": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100,
+        "signup_date": "2025-08-27"
+    },
+    {
+        "name": "deepak",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "nishu",
+        "password": "lfps",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "deepak",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "shelly",
+        "password": "jijaji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "invest",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "deepak",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "deepak0002",
+        "password": "faterji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "deepak0",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "ashish",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "madan",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "deepaks",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "deepak",
+        "password": "fatherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "dee",
+        "password": "faherji",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "patharbaaz",
+        "password": "jammu",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "deepak",
+        "email": "deepak009",
+        "bonus": 100
+    },
+    {
+        "name": "deepak010",
+        "email": "0101",
+        "bonus": 100
+    },
+    {
+        "name": "deepak",
+        "email": "9999",
+        "bonus": 100
+    },
+    {
+        "name": "dee",
+        "email": "dee0202",
+        "bonus": 100
+    },
+    {
+        "name": "deeak",
+        "email": "deoam",
+        "bonus": 100
+    },
+    {
+        "name": "meera",
+        "email": "mere",
+        "bonus": 100
+    },
+    {
+        "name": "deepak",
+        "email": "001",
+        "bonus": 100
+    },
+    {
+        "name": "deepak",
+        "email": "10101",
+        "bonus": 100
+    },
+    {
+        "name": "deepa",
+        "password": "jsdnlo",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "bonus": 100
+    },
+    {
+        "name": "deepakjeena",
+        "password": "fatherjiu",
+        "balance": 100,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0,
+            "Beamer": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "gold_shares": {
+            "Titan": 0,
+            "Muthoot Finance": 0,
+            "Manappuram Finance": 0,
+            "Rajesh Exports": 0,
+            "PC Jeweller": 0
+        },
+        "bonus": 100,
+        "signup_date": "2025-09-14"
+    },
+    {
+        "name": "angad",
+        "email": "bali1234",
+        "bonus": 100
+    },
+    {
+        "name": "deepak",
+        "email": "deepak1500@gmail.com",
+        "bonus": 100
+    }
+]
