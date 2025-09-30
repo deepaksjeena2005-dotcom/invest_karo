@@ -314,16 +314,44 @@ def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", t
     animation_loop()
 
 # Trading window
+# Helper function to simulate OHLC 1-minute data
+def simulate_1min_ohlc(base_price, mins=60):
+    now = pd.Timestamp.now()
+    dates = [now - pd.Timedelta(minutes=i) for i in reversed(range(mins))]
+    data = []
+    last_close = base_price
+    for _ in range(mins):
+        open_p = round(last_close + np.random.normal(0, 0.3), 2)
+        high_p = round(open_p + abs(np.random.normal(0, 0.5)), 2)
+        low_p = round(open_p - abs(np.random.normal(0, 0.5)), 2)
+        close_p = round(low_p + np.random.uniform(0, high_p - low_p), 2)
+        data.append([open_p, high_p, low_p, close_p])
+        last_close = close_p
+    df = pd.DataFrame(data, columns=['Open', 'High', 'Low', 'Close'], index=pd.DatetimeIndex(dates))
+    return df
+
+# Helper to draw mplfinance chart inside tkinter frame
+def draw_candlestick_chart(parent_frame, ohlc_df, company):
+    for widget in parent_frame.winfo_children():
+        widget.destroy()
+    fig, ax = mpf.plot(ohlc_df, type='candle', style='charles', returnfig=True, figsize=(6, 3))
+    ax[0].set_title(f"{company} - Last {len(ohlc_df)} mins")
+    canvas = FigureCanvasTkAgg(fig, master=parent_frame)
+    canvas.draw()
+    canvas.get_tk_widget().pack(fill='both', expand=True)
+    return canvas
+
+# Modified buy_sell_window with embedded chart
 def buy_sell_window(user_email):
     users = load_users()
     if user_email not in users:
         messagebox.showerror("Error", "User not found.")
         return
-    
+
     user_data = users[user_email]
     trade_win = tk.Toplevel()
     trade_win.title(f"Trade - {user_data['name']}")
-    trade_win.geometry("600x600")
+    trade_win.geometry("700x700")
     trade_win.configure(bg="white")
 
     bal_var = tk.StringVar(value=f"Balance: ₹{user_data['balance']}")
@@ -331,7 +359,8 @@ def buy_sell_window(user_email):
 
     tk.Label(trade_win, text="Select Sector:", font=("Arial", 12, "bold"), bg="white").pack()
     sector_var = tk.StringVar()
-    sector_cb = ttk.Combobox(trade_win, textvariable=sector_var, state="readonly", values=["Automobile", "Petroleum", "Steel", "Gold"], font=("Arial", 11))
+    sector_cb = ttk.Combobox(trade_win, textvariable=sector_var, state="readonly",
+                             values=["Automobile", "Petroleum", "Steel", "Gold"], font=("Arial", 11))
     sector_cb.pack(pady=6)
 
     tk.Label(trade_win, text="Select Company:", font=("Arial", 12, "bold"), bg="white").pack()
@@ -341,6 +370,9 @@ def buy_sell_window(user_email):
 
     price_var = tk.StringVar(value="Price: -")
     tk.Label(trade_win, textvariable=price_var, font=("Arial", 12, "italic"), bg="white", fg="blue").pack()
+
+    chart_frame = tk.Frame(trade_win, bg="white", height=300)
+    chart_frame.pack(fill='both', expand=True, padx=15, pady=10)
 
     def update_companies(event):
         s = sector_var.get()
@@ -356,14 +388,24 @@ def buy_sell_window(user_email):
             company_cb['values'] = []
         company_var.set("")
         price_var.set("Price: -")
+        for widget in chart_frame.winfo_children():
+            widget.destroy()
 
     sector_cb.bind("<<ComboboxSelected>>", update_companies)
 
-    def update_price(event):
+    def update_price_and_chart(event):
         c = company_var.get()
-        price_var.set(f"Price: ₹{PRICES.get(c, '-')}" if c else "Price: -")
+        if c:
+            price = PRICES.get(c, 10)
+            price_var.set(f"Price: ₹{price}")
+            ohlc_df = simulate_1min_ohlc(price, 60)
+            draw_candlestick_chart(chart_frame, ohlc_df, c)
+        else:
+            price_var.set("Price: -")
+            for widget in chart_frame.winfo_children():
+                widget.destroy()
 
-    company_cb.bind("<<ComboboxSelected>>", update_price)
+    company_cb.bind("<<ComboboxSelected>>", update_price_and_chart)
 
     qty_entry = tk.Entry(trade_win, font=("Arial", 12))
     qty_entry.pack(pady=8)
