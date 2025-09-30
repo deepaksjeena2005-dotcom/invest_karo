@@ -120,40 +120,6 @@ def validate_email(email):
 def validate_password(pwd):
     return len(pwd) >= 6
 
-def buy_sell_window(user_email):
-    trade_win = tk.Toplevel()
-    trade_win.title("Buy / Sell Shares")
-    trade_win.geometry("400x300")
-
-    # --- define functions before using them ---
-    def buy():
-        # logic to handle buying shares
-        messagebox.showinfo("Buy", f"Shares bought successfully for {user_email}")
-
-    def sell():
-        # logic to handle selling shares
-        messagebox.showinfo("Sell", f"Shares sold successfully for {user_email}")
-
-    # --- now create buttons ---
-    tk.Button(
-        trade_win, 
-        text="Buy", 
-        font=("Arial", 12, "bold"), 
-        bg="green", 
-        fg="white", 
-        command=buy
-    ).pack(pady=2)
-
-    tk.Button(
-        trade_win, 
-        text="Sell", 
-        font=("Arial", 12, "bold"), 
-        bg="red", 
-        fg="white", 
-        command=sell
-    ).pack(pady=2)
-
-
 
 # Authentication manager
 class AuthManager:
@@ -348,34 +314,6 @@ def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", t
     animation_loop()
 
 # Trading window
-# Helper function to simulate OHLC 1-minute data
-def simulate_1min_ohlc(base_price, mins=60):
-    now = pd.Timestamp.now()
-    dates = [now - pd.Timedelta(minutes=i) for i in reversed(range(mins))]
-    data = []
-    last_close = base_price
-    for _ in range(mins):
-        open_p = round(last_close + np.random.normal(0, 0.3), 2)
-        high_p = round(open_p + abs(np.random.normal(0, 0.5)), 2)
-        low_p = round(open_p - abs(np.random.normal(0, 0.5)), 2)
-        close_p = round(low_p + np.random.uniform(0, high_p - low_p), 2)
-        data.append([open_p, high_p, low_p, close_p])
-        last_close = close_p
-    df = pd.DataFrame(data, columns=['Open', 'High', 'Low', 'Close'], index=pd.DatetimeIndex(dates))
-    return df
-
-# Helper to draw mplfinance chart inside tkinter frame
-def draw_candlestick_chart(parent_frame, ohlc_df, company):
-    for widget in parent_frame.winfo_children():
-        widget.destroy()
-    fig, ax = mpf.plot(ohlc_df, type='candle', style='charles', returnfig=True, figsize=(6, 3))
-    ax[0].set_title(f"{company} - Last {len(ohlc_df)} mins")
-    canvas = FigureCanvasTkAgg(fig, master=parent_frame)
-    canvas.draw()
-    canvas.get_tk_widget().pack(fill='both', expand=True)
-    return canvas
-
-# Modified buy_sell_window with embedded chart
 def buy_sell_window(user_email):
     users = load_users()
     if user_email not in users:
@@ -391,70 +329,81 @@ def buy_sell_window(user_email):
     bal_var = tk.StringVar(value=f"Balance: ₹{user_data['balance']}")
     tk.Label(trade_win, textvariable=bal_var, font=("Arial", 14, "bold"), bg="white", fg="green").pack(pady=4)
 
-    tk.Label(trade_win, text="Select Sector:", font=("Arial", 12, "bold"), bg="white").pack(pady=3)
+    tk.Label(trade_win, text="Select Sector:", font=("Arial", 12, "bold"), bg="white").pack(pady=2)
     sector_var = tk.StringVar()
     sector_cb = ttk.Combobox(trade_win, textvariable=sector_var, state="readonly",
                              values=["Automobile", "Petroleum", "Steel", "Gold"], font=("Arial", 11))
-    sector_cb.pack(pady=3)
+    sector_cb.pack(pady=2)
 
-    tk.Label(trade_win, text="Select Company:", font=("Arial", 12, "bold"), bg="white").pack(pady=3)
+    tk.Label(trade_win, text="Select Company:", font=("Arial", 12, "bold"), bg="white").pack(pady=2)
     company_var = tk.StringVar()
     company_cb = ttk.Combobox(trade_win, textvariable=company_var, state="readonly", font=("Arial", 11))
-    company_cb.pack(pady=3)
+    company_cb.pack(pady=2)
 
     price_var = tk.StringVar(value="Price: -")
-    tk.Label(trade_win, textvariable=price_var, font=("Arial", 12, "italic"), bg="white", fg="blue").pack(pady=3)
+    tk.Label(trade_win, textvariable=price_var, font=("Arial", 12, "italic"), bg="white", fg="blue").pack(pady=2)
 
     chart_frame = tk.Frame(trade_win, bg="white", height=300)
-    chart_frame.pack(fill='both', expand=True, padx=15, pady=10)
+    chart_frame.pack(fill='both', expand=True, padx=15, pady=8)
 
-    # ... (rest of your chart code and logic remain unchanged)
+    # Variables to hold OHLC data and last close price
+    ohlc_data = []
+    last_close = None
 
-    qty_entry = tk.Entry(trade_win, font=("Arial", 12))
-    qty_entry.pack(pady=4)
+    def simulate_next_ohlc(prev_close):
+        o = prev_close
+        c = max(0.01, o + np.random.normal(0, 0.5))
+        h = max(o, c) + abs(np.random.normal(0, 0.3))
+        l = min(o, c) - abs(np.random.normal(0, 0.3))
+        l = max(l, 0.01)
+        return [round(o, 2), round(h, 2), round(l, 2), round(c, 2)]
 
-    tk.Button(trade_win, text="Buy", font=("Arial", 12, "bold"), bg="green", fg="white", command=buy).pack(pady=2)
-    tk.Button(trade_win, text="Sell", font=("Arial", 12, "bold"), bg="red", fg="white", command=sell).pack(pady=2)
-    tk.Button(trade_win, text="Logout", font=("Arial", 12, "bold"), bg="gray", fg="black", command=logout).pack(pady=6)
-
-    # ... (remaining code continues)
-
-
-    def update_companies(event):
-        s = sector_var.get()
-        if s == "Automobile":
-            company_cb['values'] = list(AUTO_COMPANIES.keys())
-        elif s == "Petroleum":
-            company_cb['values'] = list(PETROLEUM_COMPANIES.keys())
-        elif s == "Steel":
-            company_cb['values'] = list(STEEL_COMPANIES.keys())
-        elif s == "Gold":
-            company_cb['values'] = list(GOLD_COMPANIES.keys())
-        else:
-            company_cb['values'] = []
-        company_var.set("")
-        price_var.set("Price: -")
+    def redraw_chart():
+        if len(ohlc_data) == 0:
+            return
+        df = pd.DataFrame(ohlc_data, columns=['Open', 'High', 'Low', 'Close'])
+        df.index = pd.date_range(end=pd.Timestamp.now(), periods=len(ohlc_data), freq='T')
         for widget in chart_frame.winfo_children():
             widget.destroy()
+        fig, ax = mpf.plot(df, type='candle', style='charles', returnfig=True, figsize=(6, 3))
+        ax[0].set_title(f"{company_var.get()} - Last {len(df)} minutes")
+        canvas = FigureCanvasTkAgg(fig, master=chart_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill='both', expand=True)
 
-    sector_cb.bind("<<ComboboxSelected>>", update_companies)
+    def update_chart_periodically():
+        nonlocal last_close
+        if last_close is None:
+            base_price = PRICES.get(company_var.get(), 10)
+            last_close = base_price
+            for _ in range(20):
+                candle = simulate_next_ohlc(last_close)
+                last_close = candle[3]
+                ohlc_data.append(candle)
+        else:
+            candle = simulate_next_ohlc(last_close)
+            last_close = candle[3]
+            ohlc_data.append(candle)
+            if len(ohlc_data) > 60:
+                ohlc_data.pop(0)
+        redraw_chart()
+        trade_win.after(60000, update_chart_periodically)  # schedule next update in 1 minute
 
     def update_price_and_chart(event):
+        ohlc_data.clear()
+        price_var.set("Price: -")
+        nonlocal last_close
+        last_close = None
         c = company_var.get()
         if c:
             price = PRICES.get(c, 10)
             price_var.set(f"Price: ₹{price}")
-            ohlc_df = simulate_1min_ohlc(price, 60)
-            draw_candlestick_chart(chart_frame, ohlc_df, c)
-        else:
-            price_var.set("Price: -")
-            for widget in chart_frame.winfo_children():
-                widget.destroy()
+            update_chart_periodically()
 
     company_cb.bind("<<ComboboxSelected>>", update_price_and_chart)
 
     qty_entry = tk.Entry(trade_win, font=("Arial", 12))
-    qty_entry.pack(pady=8)
+    qty_entry.pack(pady=3)
 
     def commit():
         save_users(users)
@@ -463,14 +412,14 @@ def buy_sell_window(user_email):
     def buy():
         c = company_var.get()
         if not c:
-            messagebox.showerror("Error", "Select a company.")
+            messagebox.showerror("Error", "Select a company first.")
             return
-        qty = qty_entry.get()
-        if not qty.isdigit() or int(qty) <= 0:
-            messagebox.showerror("Error", "Enter positive quantity.")
+        qty_str = qty_entry.get()
+        if not qty_str.isdigit() or int(qty_str) <= 0:
+            messagebox.showerror("Error", "Enter a valid positive quantity")
             return
-        qty = int(qty)
-        price = PRICES.get(c)
+        qty = int(qty_str)
+        price = last_close if last_close else PRICES.get(c, 10)
         cost = price * qty
         if user_data["balance"] < cost:
             messagebox.showerror("Error", "Insufficient balance.")
@@ -493,19 +442,19 @@ def buy_sell_window(user_email):
             user_data["last_buy_price"] = {}
         user_data["last_buy_price"][c] = price
         commit()
-        messagebox.showinfo("Success", f"Bought {qty} shares of {c} for ₹{cost}.")
+        messagebox.showinfo("Success", f"Bought {qty} shares of {c} at ₹{price:.2f} each, total ₹{cost:.2f}.")
         qty_entry.delete(0, tk.END)
 
     def sell():
         c = company_var.get()
         if not c:
-            messagebox.showerror("Error", "Select a company.")
+            messagebox.showerror("Error", "Select a company first.")
             return
-        qty = qty_entry.get()
-        if not qty.isdigit() or int(qty) <= 0:
-            messagebox.showerror("Error", "Enter positive quantity.")
+        qty_str = qty_entry.get()
+        if not qty_str.isdigit() or int(qty_str) <= 0:
+            messagebox.showerror("Error", "Enter a valid positive quantity")
             return
-        qty = int(qty)
+        qty = int(qty_str)
         sh_dict = None
         if c in AUTO_COMPANIES:
             sh_dict = user_data["shares"]
@@ -516,47 +465,33 @@ def buy_sell_window(user_email):
         elif c in GOLD_COMPANIES:
             sh_dict = user_data.get("gold_shares", {})
         else:
-            messagebox.showerror("Error", "Invalid company.")
+            messagebox.showerror("Error", "Invalid company selected.")
             return
 
-        if sh_dict.get(c, 0) < qty:
-            messagebox.showerror("Error", "Not enough shares to sell.")
+        owned_qty = sh_dict.get(c, 0)
+        if owned_qty < qty:
+            messagebox.showerror("Error", f"You don't have enough shares to sell. You have {owned_qty}.")
             return
 
-        sh_dict[c] -= qty
-        earnings = PRICES[c] * qty
+        price = last_close if last_close else PRICES.get(c, 10)
+        earnings = price * qty
+        buy_price = user_data.get("last_buy_price", {}).get(c, price)
+        profit_loss = (price - buy_price) * qty
         user_data["balance"] += earnings
+        sh_dict[c] = owned_qty - qty
+
         commit()
-        messagebox.showinfo("Success", f"Sold {qty} shares of {c} for ₹{earnings}.")
+        messagebox.showinfo("Success", f"Sold {qty} shares of {c} at ₹{price:.2f} each, total ₹{earnings:.2f}.\nProfit/Loss: ₹{profit_loss:.2f}")
         qty_entry.delete(0, tk.END)
 
-    tk.Button(trade_win, text="Buy", font=("Arial", 12, "bold"), bg="green", fg="white", command=buy).pack(pady=5)
-    tk.Button(trade_win, text="Sell", font=("Arial", 12, "bold"), bg="red", fg="white", command=sell).pack(pady=5)
+    def logout():
+        if messagebox.askyesno("Logout", "Do you want to logout?"):
+            trade_win.destroy()
 
-    def open_chart():
-        c = company_var.get()
-        if c:
-            price = user_data.get("last_buy_price", {}).get(c, PRICES.get(c, CHART_PRICE_START))
-            open_dummy_candlestick_chart(user_email, c, price, side="BUY", title=f"Chart - {c}")
+    tk.Button(trade_win, text="Buy", font=("Arial", 12, "bold"), bg="green", fg="white", command=buy).pack(pady=2)
+    tk.Button(trade_win, text="Sell", font=("Arial", 12, "bold"), bg="red", fg="white", command=sell).pack(pady=2)
+    tk.Button(trade_win, text="Logout", font=("Arial", 12, "bold"), bg="gray", fg="black", command=logout).pack(pady=4)
 
-    tk.Button(trade_win, text="Open Chart", font=("Arial", 14), command=open_chart).pack(pady=12)
-
-    portfolio_frame = tk.Frame(trade_win, bg="white")
-    portfolio_frame.pack(pady=10)
-    tk.Button(portfolio_frame, text="🚗 Auto Portfolio", font=("Arial", 11), bg="lightblue",
-              command=lambda: show_portfolio_window(user_email, "auto")).grid(row=0, column=0, padx=5)
-    tk.Button(portfolio_frame, text="⛽ Petroleum Portfolio", font=("Arial", 11), bg="orange",
-              command=lambda: show_portfolio_window(user_email, "petroleum")).grid(row=0, column=1, padx=5)
-    tk.Button(portfolio_frame, text="🏭 Steel Portfolio", font=("Arial", 11), bg="gray",
-              command=lambda: show_portfolio_window(user_email, "steel")).grid(row=0, column=2, padx=5)
-    tk.Button(portfolio_frame, text="🥇 Gold Portfolio", font=("Arial", 11), bg="gold",
-              command=lambda: show_portfolio_window(user_email, "gold")).grid(row=0, column=3, padx=5)
-    tk.Button(portfolio_frame, text="Refresh Balance", font=("Arial", 11), bg="yellow",
-              command=commit).grid(row=0, column=4, padx=5)
-    tk.Button(portfolio_frame, text="Logout", font=("Arial", 11), bg="pink",
-              command=trade_win.destroy).grid(row=0, column=5, padx=5)
-    tk.Button(portfolio_frame, text="Exit App", font=("Arial", 11), bg="red",
-              command=trade_win.quit).grid(row=0, column=6, padx=5)
 
 
 

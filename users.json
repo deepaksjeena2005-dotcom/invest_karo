@@ -1293,5 +1293,44 @@
         },
         "bonus": 100,
         "created": "2025-09-29 13:12:14.160338"
+    },
+    "d123@gmail.com": {
+        "name": "d",
+        "password": "fatherji",
+        "balance": 90,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 1,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "gold_shares": {
+            "Titan": 0,
+            "Muthoot Finance": 0,
+            "Manappuram Finance": 0,
+            "Rajesh Exports": 0,
+            "PC Jeweller": 0
+        },
+        "last_buy_price": {
+            "Maruti Suzuki": 10
+        },
+        "bonus": 100,
+        "created": "2025-09-30 22:08:15.572193"
     }
 }
