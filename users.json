@@ -1254,7 +1254,7 @@
     "yashraj123@gmail.com": {
         "name": "yashraj",
         "password": "yashraj",
-        "balance": 30.0,
+        "balance": 10.0,
         "shares": {
             "Honda": 0,
             "Hyundai": 0,
@@ -1276,7 +1276,7 @@
             "JSW Steel": 1,
             "Steel Authority of India (SAIL)": 0,
             "Jindal Steel & Power": 0,
-            "NMDC Steel": 0
+            "NMDC Steel": 1
         },
         "gold_shares": {
             "Titan": 0,
@@ -1288,7 +1288,8 @@
         "last_buy_price": {
             "Bharat Petroleum": 15,
             "Hindustan Petroleum": 15,
-            "JSW Steel": 20
+            "JSW Steel": 20,
+            "NMDC Steel": 20
         },
         "bonus": 100,
         "created": "2025-09-29 13:12:14.160338"
