@@ -1254,14 +1254,15 @@
     "yashraj123@gmail.com": {
         "name": "yashraj",
         "password": "yashraj",
-        "balance": 50.0,
+        "balance": 30.0,
         "shares": {
             "Honda": 0,
             "Hyundai": 0,
             "Tata Motors": 0,
             "Mahindra & Mahindra": 0,
             "Maruti Suzuki": 0,
-            "Ashok Leyland": 0
+            "Ashok Leyland": 0,
+            "JSW Steel": 1
         },
         "petroleum_shares": {
             "Reliance Industries": 0,
