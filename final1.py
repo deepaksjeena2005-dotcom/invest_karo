@@ -120,6 +120,40 @@ def validate_email(email):
 def validate_password(pwd):
     return len(pwd) >= 6
 
+def buy_sell_window(user_email):
+    trade_win = tk.Toplevel()
+    trade_win.title("Buy / Sell Shares")
+    trade_win.geometry("400x300")
+
+    # --- define functions before using them ---
+    def buy():
+        # logic to handle buying shares
+        messagebox.showinfo("Buy", f"Shares bought successfully for {user_email}")
+
+    def sell():
+        # logic to handle selling shares
+        messagebox.showinfo("Sell", f"Shares sold successfully for {user_email}")
+
+    # --- now create buttons ---
+    tk.Button(
+        trade_win, 
+        text="Buy", 
+        font=("Arial", 12, "bold"), 
+        bg="green", 
+        fg="white", 
+        command=buy
+    ).pack(pady=2)
+
+    tk.Button(
+        trade_win, 
+        text="Sell", 
+        font=("Arial", 12, "bold"), 
+        bg="red", 
+        fg="white", 
+        command=sell
+    ).pack(pady=2)
+
+
 
 # Authentication manager
 class AuthManager:
