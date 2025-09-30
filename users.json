@@ -1169,14 +1169,60 @@
     "deepak1500@gmail.com": {
         "name": "deepak",
         "password": "fatherji",
-        "balance": 39.70954254741808,
+        "balance": 7.259868468910754,
         "shares": {
             "Honda": 0,
-            "Hyundai": 1,
-            "Tata Motors": 0,
+            "Hyundai": 2,
+            "Tata Motors": 1,
             "Mahindra & Mahindra": 1,
-            "Maruti Suzuki": 0,
+            "Maruti Suzuki": 2,
             "Ashok Leyland": 1
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 3,
+            "Hindustan Petroleum": 0,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "gold_shares": {
+            "Titan": 0,
+            "Muthoot Finance": 0,
+            "Manappuram Finance": 1,
+            "Rajesh Exports": 0,
+            "PC Jeweller": 1
+        },
+        "last_buy_price": {
+            "PC Jeweller": 30,
+            "Hyundai": 10,
+            "Ashok Leyland": 10,
+            "Mahindra & Mahindra": 10,
+            "Bharat Petroleum": 15,
+            "Maruti Suzuki": 10,
+            "Tata Motors": 10,
+            "Manappuram Finance": 30
+        },
+        "bonus": 100,
+        "created": "2025-09-15 08:24:15.574359"
+    },
+    "deepak5001@gmail.com": {
+        "name": "deepaak",
+        "password": "fatherji",
+        "balance": 85,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
         },
         "petroleum_shares": {
             "Reliance Industries": 0,
@@ -1197,16 +1243,53 @@
             "Muthoot Finance": 0,
             "Manappuram Finance": 0,
             "Rajesh Exports": 0,
-            "PC Jeweller": 1
+            "PC Jeweller": 0
         },
         "last_buy_price": {
-            "PC Jeweller": 30,
-            "Hyundai": 10,
-            "Ashok Leyland": 10,
-            "Mahindra & Mahindra": 10,
             "Bharat Petroleum": 15
         },
         "bonus": 100,
-        "created": "2025-09-15 08:24:15.574359"
+        "created": "2025-09-17 12:49:49.673745"
+    },
+    "yashraj123@gmail.com": {
+        "name": "yashraj",
+        "password": "yashraj",
+        "balance": 50.0,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 0,
+            "Tata Motors": 0,
+            "Mahindra & Mahindra": 0,
+            "Maruti Suzuki": 0,
+            "Ashok Leyland": 0
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 1,
+            "Hindustan Petroleum": 1,
+            "Oil India": 0
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 1,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "gold_shares": {
+            "Titan": 0,
+            "Muthoot Finance": 0,
+            "Manappuram Finance": 0,
+            "Rajesh Exports": 0,
+            "PC Jeweller": 0
+        },
+        "last_buy_price": {
+            "Bharat Petroleum": 15,
+            "Hindustan Petroleum": 15,
+            "JSW Steel": 20
+        },
+        "bonus": 100,
+        "created": "2025-09-29 13:12:14.160338"
     }
 }

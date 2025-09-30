@@ -1,36 +1,24 @@
-"""
-merged_app_with_auto_chart.py
-
-Merged Tkinter stock-market GUI + embedded dummy trading chart (matplotlib animation).
-Behavior change: selecting a company (after selecting sector) will automatically open the dummy chart for that company.
-
-Dependencies:
-    pip install pillow numpy matplotlib mplfinance pandas
-Run:
-    python merged_app_with_auto_chart.py
-"""
-
 import os
 import json
 import webbrowser
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import simpledialog, messagebox, ttk
 from PIL import Image, ImageTk
-
-# Matplotlib imports for embedded chart
+import datetime
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import mplfinance as mpf
-import pandas as pd
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from datetime import datetime, timedelta
 
-
-# ----------------------------
-# Config / Files / Data
-# ----------------------------
+# -------------------- Constants --------------------
 DB_FILE = "users.json"
 REG_FILE = "registrations.json"
+ADMIN_PASSWORD = "admin123"
 
 AUTO_COMPANIES = {
     "Honda": "https://www.screener.in/company/522064/",
@@ -40,6 +28,7 @@ AUTO_COMPANIES = {
     "Maruti Suzuki": "https://www.screener.in/company/MARUTI/",
     "Ashok Leyland": "https://www.screener.in/company/ASHOKLEY/"
 }
+
 PETROLEUM_COMPANIES = {
     "Reliance Industries": "https://www.screener.in/company/RELIANCE/consolidated/",
     "Indian Oil Corporation": "https://www.screener.in/company/IOC/",
@@ -47,6 +36,7 @@ PETROLEUM_COMPANIES = {
     "Hindustan Petroleum": "https://www.screener.in/company/HINDPETRO/",
     "Oil India": "https://www.screener.in/company/OIL/"
 }
+
 STEEL_COMPANIES = {
     "Tata Steel": "https://www.screener.in/company/TATASTEEL/",
     "JSW Steel": "https://www.screener.in/company/JSWSTEEL/",
@@ -55,64 +45,60 @@ STEEL_COMPANIES = {
     "NMDC Steel": "https://www.screener.in/company/NMDCSTEEL/"
 }
 
+GOLD_COMPANIES = {
+    "Titan": "https://www.screener.in/company/TITAN/",
+    "Muthoot Finance": "https://www.screener.in/company/MUTHOOTFIN/",
+    "Manappuram Finance": "https://www.screener.in/company/MANAPPURAM/",
+    "Rajesh Exports": "https://www.screener.in/company/RAJESHEXPO/",
+    "PC Jeweller": "https://www.screener.in/company/PCJEWELLER/"
+}
+
 PRICES = {
     **{c: 10 for c in AUTO_COMPANIES},
     **{c: 15 for c in PETROLEUM_COMPANIES},
-    **{c: 20 for c in STEEL_COMPANIES}
+    **{c: 20 for c in STEEL_COMPANIES},
+    **{c: 30 for c in GOLD_COMPANIES}
 }
 
-IMAGE_PATHS = {
-    "logo": "C:\\Users\\neham\\Downloads\\IK.png.png",
-    "auto_bg": "C:\\Users\\neham\\Downloads\\auto.png",
-    "petro_bg": "C:\\Users\\neham\\Downloads\\petro.png",
-    "steel_bg": "C:\\Users\\neham\\Downloads\\steel1.png",
-    "admin": "C:\\Users\\neham\\Downloads\\admin.png.png"
-}
-
-# Chart defaults
-CHART_UPDATE_INTERVAL = 800  # ms
-CHART_MAX_POINTS = 200
 CHART_PRICE_START = 100.0
+CHART_MAX_POINTS = 200
 CHART_STEP_STD = 0.5
+CHART_UPDATE_INTERVAL = 800
 
-# ----------------------------
-# Helper functions: JSON & images
-# ----------------------------
+# -------------------- JSON Helpers --------------------
 def safe_json_load(path, default):
     if not os.path.exists(path):
         return default
     try:
         with open(path, "r", encoding="utf-8") as f:
-            content = f.read().strip()
-        if not content:
-            return default
-        return json.loads(content)
-    except (json.JSONDecodeError, UnicodeDecodeError):
+            c = f.read().strip()
+            return json.loads(c) if c else default
+    except Exception:
         return default
-
 
 def save_json(path, data):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
-
 def load_users():
     return safe_json_load(DB_FILE, {})
-
 
 def save_users(users):
     save_json(DB_FILE, users)
 
-
 def load_registrations():
     return safe_json_load(REG_FILE, [])
 
-
 def save_registration(entry):
-    data = load_registrations()
-    data.append(entry)
-    save_json(REG_FILE, data)
+    regs = load_registrations()
+    regs.append(entry)
+    save_json(REG_FILE, regs)
 
+def get_default_shares(companies):
+    return {c: 0 for c in companies}
+
+def open_link(url):
+    webbrowser.open(url)
 
 def load_image(path, size=None):
     try:
@@ -122,495 +108,447 @@ def load_image(path, size=None):
         if size:
             img = img.resize(size, Image.LANCZOS)
         return ImageTk.PhotoImage(img)
-    except Exception as e:
-        print(f"load_image error ({path}):", e)
+    except Exception:
         return None
 
+def validate_email(email):
+    return '@' in email and '.' in email.split('@')[-1]
 
-def open_link(url):
-    webbrowser.open(url)
+def validate_password(pwd):
+    return len(pwd) >= 6
 
+# -------------------- Authentication Manager --------------------
+class AuthManager:
+    def __init__(self, root):
+        self.root = root
 
-# ----------------------------
-# Registration & User logic
-# ----------------------------
-def get_default_shares(company_dict):
-    return {company: 0 for company in company_dict.keys()}
+    def signup_user(self, name, email, password):
+        if not (name and email and password):
+            messagebox.showerror("Error", "All fields are required!")
+            return False
+        if not validate_email(email):
+            messagebox.showerror("Error", "Invalid email address!")
+            return False
+        if not validate_password(password):
+            messagebox.showerror("Error", "Password must be at least 6 characters!")
+            return False
 
+        users = load_users()
+        if email in users:
+            messagebox.showerror("Error", "Email already registered! Please login.")
+            return False
 
-def register_user_callback(entry_name, entry_email, entry_password):
-    name = entry_name.get().strip()
-    email = entry_email.get().strip()
-    password = entry_password.get().strip()
+        users[email] = {
+            "name": name,
+            "password": password,
+            "balance": 100,
+            "shares": get_default_shares(AUTO_COMPANIES),
+            "petroleum_shares": get_default_shares(PETROLEUM_COMPANIES),
+            "steel_shares": get_default_shares(STEEL_COMPANIES),
+            "gold_shares": get_default_shares(GOLD_COMPANIES),
+            "last_buy_price": {},
+            "bonus": 100,
+            "created": str(datetime.datetime.now())
+        }
 
-    if not name or not email or not password:
-        messagebox.showerror("Error", "All fields are required!")
-        return
-
-    users = load_users()
-    if email in users:
-        messagebox.showerror("Error", "Email already registered!")
-        return
-
-    users[email] = {
-        "name": name,
-        "password": password,
-        "balance": 100,
-        "shares": get_default_shares(AUTO_COMPANIES),
-        "petroleum_shares": get_default_shares(PETROLEUM_COMPANIES),
-        "steel_shares": get_default_shares(STEEL_COMPANIES),
-        "bonus": 100,
-        "last_buy_price": {}
-    }
-    save_users(users)
-    save_registration({"name": name, "email": email, "bonus": 100})
-    messagebox.showinfo("Success", "Registration successful! You received ₹100 bonus.")
-    buy_sell_window(email)
-
-
-# ----------------------------
-# Dummy Trading Chart (matplotlib) with profit withdrawal - embedded into Tkinter
-# ----------------------------
-def open_dummy_candlestick_chart(user_email=None, company=None, entry_price=None, side="BUY", title="Dummy Candlestick Chart"):
-    if user_email is None or company is None or entry_price is None:
-        messagebox.showerror("Error", "User, company, or entry price info missing for chart.")
-        return
-    ENTRY_PRICE = float(entry_price)
-    SIDE = side.upper()
-    ohlc_data = []
-
-    chart_win = tk.Toplevel(root)
-    chart_win.title(title)
-    chart_win.geometry("950x600")
-    chart_win.configure(bg="black")
-
-    fig = mpf.figure(style='charles', figsize=(9,4.5), facecolor='black')
-    ax = fig.add_subplot(1, 1, 1)
-    fig.suptitle(title, color='white', fontsize=16)
-
-    canvas = FigureCanvasTkAgg(fig, master=chart_win)
-    canvas_widget = canvas.get_tk_widget()
-    canvas_widget.pack(fill=tk.BOTH, expand=True)
-
-    state = {
-        "counter": 0,
-        "ohlc": ohlc_data,
-        "last_close": ENTRY_PRICE
-    }
-
-    users = load_users()
-    if user_email not in users:
-        messagebox.showerror("Error", "User not found.")
-        chart_win.destroy()
-        return
-    user_data = users[user_email]
-
-    def simulate_next_ohlc(last_close):
-        open_ = last_close
-        close = open_ + np.random.normal(0, CHART_STEP_STD)
-        close = max(close, 0.1)
-        high = max(open_, close) + abs(np.random.normal(0, CHART_STEP_STD * 0.7))
-        low = min(open_, close) - abs(np.random.normal(0, CHART_STEP_STD * 0.7))
-        high = max(high, open_, close)
-        low = min(low, open_, close)
-        low = max(low, 0.05)
-        return [open_, high, low, close]
-
-    def compute_pl(current_price):
-        if SIDE == "BUY":
-            abs_pl = current_price - ENTRY_PRICE
-        else:
-            abs_pl = ENTRY_PRICE - current_price
-        pct = (abs_pl / ENTRY_PRICE) * 100.0
-        return abs_pl, pct
-
-    def redraw_chart():
-        if len(state["ohlc"]) > 0:
-            df = pd.DataFrame(state["ohlc"], columns=["Open", "High", "Low", "Close"])
-            df['Volume'] = 1
-            df.index = pd.date_range(start="2024-01-01", periods=len(df), freq='T')
-            ax.clear()
-            mpf.plot(df, ax=ax, type='candle', style='charles',
-                     datetime_format='%H:%M', xrotation=0,
-                     ylabel='', ylabel_lower='', volume=False, warn_too_much_data=10000)
-            current_price = df.iloc[-1]['Close']
-            abs_pl, pct = compute_pl(current_price)
-            ax.set_facecolor("black")
-            ax.set_title(f"{title} | Current: {current_price:.2f} | P/L: {abs_pl:+.2f} ({pct:+.2f}%)", color='white')
-            ax.axhline(ENTRY_PRICE, color="yellow", linestyle="--", linewidth=1.2, label="Entry Price")
-            ax.legend(facecolor="gray", edgecolor="white", labelcolor="white")
-        canvas.draw()
-
-    def update_chart(frame=None):
-        last_close = state['last_close']
-        o, h, l, c = simulate_next_ohlc(last_close)
-        state['ohlc'].append([o, h, l, c])
-        state['last_close'] = c
-        state['counter'] += 1
-        redraw_chart()
-
-    def submit_manual_price():
-        val = price_entry.get().strip()
-        try:
-            manual_close = float(val)
-            if manual_close <= 0:
-                messagebox.showerror("Error", "Enter a positive price.")
-                return
-            last_close = state['last_close']
-            o, h, l, _ = simulate_next_ohlc(last_close)
-            state['ohlc'].append([o, h, l, manual_close])
-            state['last_close'] = manual_close
-            state['counter'] += 1
-            redraw_chart()
-            price_entry.delete(0, tk.END)
-        except Exception:
-            messagebox.showerror("Error", "Please enter a valid number.")
-
-    def withdraw_profit():
-        latest_close = state['last_close']
-        shares_owned = 0
-
-        if company in AUTO_COMPANIES:
-            shares_owned = user_data.get("shares", {}).get(company, 0)
-        elif company in PETROLEUM_COMPANIES:
-            shares_owned = user_data.get("petroleum_shares", {}).get(company, 0)
-        elif company in STEEL_COMPANIES:
-            shares_owned = user_data.get("steel_shares", {}).get(company, 0)
-
-        if shares_owned <= 0:
-            messagebox.showinfo("No Shares", "You do not own shares of this company.")
-            return
-
-        if SIDE == "BUY":
-            profit_per_share = latest_close - ENTRY_PRICE
-        else:
-            profit_per_share = ENTRY_PRICE - latest_close
-
-        total_profit = shares_owned * profit_per_share
-
-        if total_profit <= 0:
-            messagebox.showinfo("No Profit", "No profit to withdraw currently.")
-            return
-
-        user_data["balance"] = user_data.get("balance", 0) + total_profit
         save_users(users)
-        messagebox.showinfo("Withdrawn Profit", f"₹{total_profit:.2f} added to your balance.\nNew balance: ₹{user_data['balance']:.2f}")
+        save_registration({"name": name, "email": email, "bonus": 100})
+        messagebox.showinfo("Success", f"Welcome {name}! Signup successful with ₹100 bonus.")
+        return True
 
-    def close_chart():
-        try:
-            chart_win.anim.event_source.stop()
-        except Exception:
-            pass
-        chart_win.destroy()
+    def signin_user(self, email, password):
+        users = load_users()
+        if email not in users:
+            messagebox.showerror("Error", "User not found! Please signup first.")
+            return None
+        if users[email]["password"] != password:
+            messagebox.showerror("Error", "Incorrect password!")
+            return None
+        messagebox.showinfo("Welcome", f"Welcome back {users[email]['name']}! Balance: ₹{users[email]['balance']}")
+        return email
 
-    import threading
-    stop_flag = [False]
-    def run_anim():
-        while not stop_flag[0]:
-            chart_win.after(CHART_UPDATE_INTERVAL, update_chart)
-            chart_win.update_idletasks()
-            chart_win.after(CHART_UPDATE_INTERVAL)
+# -------------------- Profit Helper --------------------
+def add_profit_to_balance(user_data, profit_amount):
+    if profit_amount > 0:
+        user_data["balance"] += profit_amount
 
-    chart_win.anim_thread = threading.Thread(target=run_anim, daemon=True)
-    chart_win.anim_thread.start()
+# -------------------- Candlestick Chart --------------------
+def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", title="Trading Chart"):
+    # Function body omitted for brevity (use your existing chart simulation code)
+    pass
 
-    control_frame = tk.Frame(chart_win, bg="black")
-    control_frame.pack(fill=tk.X, pady=8)
+# -------------------- Trading Window --------------------
+def buy_sell_window(user_email):
+    # Function body omitted for brevity (use your existing buy/sell UI code)
+    pass
 
-    tk.Label(control_frame, text="Set Next Candlestick Close Price:", font=("Arial", 11), bg="black", fg="white").pack(side=tk.LEFT, padx=6)
-    price_entry = tk.Entry(control_frame, font=("Arial", 11), width=10, bg="gray", fg="white", insertbackground="white")
-    price_entry.pack(side=tk.LEFT, padx=6)
+# -------------------- Portfolio Window --------------------
+def show_portfolio_window(user_email, sector):
+    # Function body omitted for brevity (use your existing portfolio UI code)
+    pass
 
-    tk.Button(control_frame, text="Submit", font=("Arial", 11, "bold"),
-              bg="white", fg="black", command=submit_manual_price).pack(side=tk.LEFT, padx=6)
+# -------------------- Admin --------------------
+def check_admin_password():
+    # Function body omitted for brevity (use your existing admin password check code)
+    pass
 
-    tk.Button(control_frame, text="Withdraw Profit", font=("Arial", 11, "bold"),
-              bg="green", fg="white", command=withdraw_profit).pack(side=tk.LEFT, padx=6)
+def show_admin_dashboard():
+    # Function body omitted for brevity (use your existing admin dashboard code)
+    pass
 
-    tk.Button(control_frame, text="Close Chart", font=("Arial", 11, "bold"),
-              bg="red", fg="white", command=lambda: [stop_flag.__setitem__(0, True), close_chart()]).pack(side=tk.RIGHT, padx=8)
+# -------------------- Main Window --------------------
+def create_main_window():
+    global root
+    root = tk.Tk()
+    root.title("InvestKaro - Stock Market Simulator")
+    root.geometry("500x700")
+    root.configure(bg="white")
 
+    # Logo
+    logo_img = load_image("C:\\Users\\neham\\Downloads\\IK.png.png", (300, 200))
+    if logo_img:
+        logo_label = tk.Label(root, image=logo_img, bg="white")
+        logo_label.image = logo_img
+        logo_label.pack(pady=10)
+    else:
+        tk.Label(root, text="InvestKaro", font=("Arial", 24, "bold"), bg="white", fg="green").pack(pady=20)
 
+    tk.Label(root, text="Stock Market Simulator", font=("Arial", 16), bg="white", fg="gray").pack()
 
-# ----------------------------
-# Buy/Sell Window modified to store last buy price and open chart with profit withdrawal
-# ----------------------------
+    notebook = ttk.Notebook(root)
+    notebook.pack(pady=20, expand=True, fill="both", padx=20)
+
+    auth_manager = AuthManager(root)
+
+    # -------------------- Signup Tab --------------------
+    signup_frame = tk.Frame(notebook, bg="white")
+    notebook.add(signup_frame, text="Sign Up")
+    tk.Label(signup_frame, text="Create New Account", font=("Arial", 18, "bold"), bg="white", fg="green").pack(pady=20)
+    tk.Label(signup_frame, text="Full Name:", font=("Arial", 12), bg="white").pack()
+    signup_name_entry = tk.Entry(signup_frame, font=("Arial", 12), width=25)
+    signup_name_entry.pack(pady=5)
+    tk.Label(signup_frame, text="Email Address:", font=("Arial", 12), bg="white").pack()
+    signup_email_entry = tk.Entry(signup_frame, font=("Arial", 12), width=25)
+    signup_email_entry.pack(pady=5)
+    tk.Label(signup_frame, text="Password:", font=("Arial", 12), bg="white").pack()
+    signup_password_entry = tk.Entry(signup_frame, font=("Arial", 12), show="*", width=25)
+    signup_password_entry.pack(pady=5)
+
+    def handle_signup():
+        success = auth_manager.signup_user(
+            signup_name_entry.get().strip(),
+            signup_email_entry.get().strip(),
+            signup_password_entry.get()
+        )
+        if success:
+            signup_name_entry.delete(0, tk.END)
+            signup_email_entry.delete(0, tk.END)
+            signup_password_entry.delete(0, tk.END)
+            notebook.select(1)
+
+    tk.Button(signup_frame, text="Create Account", font=("Arial", 14, "bold"), bg="green", fg="white",
+              command=handle_signup, width=15).pack(pady=20)
+    tk.Label(signup_frame, text="🎁 Get ₹100 signup bonus!", font=("Arial", 12), bg="white", fg="orange").pack()
+
+    # -------------------- Login Tab --------------------
+    login_frame = tk.Frame(notebook, bg="white")
+    notebook.add(login_frame, text="Login")
+    tk.Label(login_frame, text="Welcome Back!", font=("Arial", 18, "bold"), bg="white", fg="blue").pack(pady=20)
+    tk.Label(login_frame, text="Email Address:", font=("Arial", 12), bg="white").pack()
+    login_email_entry = tk.Entry(login_frame, font=("Arial", 12), width=25)
+    login_email_entry.pack(pady=5)
+    tk.Label(login_frame, text="Password:", font=("Arial", 12), bg="white").pack()
+    login_password_entry = tk.Entry(login_frame, font=("Arial", 12), show="*", width=25)
+    login_password_entry.pack(pady=5)
+
+    def handle_login():
+        user_email = auth_manager.signin_user(
+            login_email_entry.get().strip(),
+            login_password_entry.get()
+        )
+        if user_email:
+            login_email_entry.delete(0, tk.END)
+            login_password_entry.delete(0, tk.END)
+            buy_sell_window(user_email)
+
+    tk.Button(login_frame, text="Login", font=("Arial", 14, "bold"), bg="blue", fg="white",
+              command=handle_login, width=15).pack(pady=20)
+
+    # -------------------- Admin Tab --------------------
+    admin_frame = tk.Frame(notebook, bg="white")
+    notebook.add(admin_frame, text="Admin")
+    tk.Label(admin_frame, text="Administrator Panel", font=("Arial", 18, "bold"), bg="white", fg="red").pack(pady=40)
+    tk.Button(admin_frame, text="View All Users", font=("Arial", 14, "bold"), bg="red", fg="white",
+              command=check_admin_password, width=15).pack(pady=20)
+    tk.Label(admin_frame, text="⚠️ Admin access required", font=("Arial", 12, "italic"), bg="white", fg="gray").pack()
+
+    return root
+
+# -------------------- Run App ----------------
+# -------------------- Buy/Sell Window --------------------
 def buy_sell_window(user_email):
     users = load_users()
-    if user_email not in users:
-        messagebox.showerror("Error", "User not found.")
-        return
     user_data = users[user_email]
 
-    trade_win = tk.Toplevel(root)
-    trade_win.title(f"Buy/Sell Stocks - {user_data['name']}")
-    trade_win.geometry("520x520")
-    trade_win.configure(bg="white")
+    window = tk.Toplevel()
+    window.title(f"Trading - {user_data['name']}")
+    window.geometry("600x600")
+    window.configure(bg="white")
 
-    bal_var = tk.StringVar(value=f"Balance: ₹{user_data['balance']}")
-    tk.Label(trade_win, textvariable=bal_var, font=("Arial", 12, "bold"), bg="white").pack(pady=5)
+    tk.Label(window, text=f"Welcome, {user_data['name']}", font=("Arial", 16, "bold"), bg="white", fg="green").pack(pady=10)
+    tk.Label(window, text=f"Balance: ₹{user_data['balance']}", font=("Arial", 14), bg="white", fg="blue").pack(pady=5)
 
-    tk.Label(trade_win, text="Select Sector:", font=("Arial", 11), bg="white").pack()
-    sector_var = tk.StringVar()
-    sector_combo = ttk.Combobox(trade_win, textvariable=sector_var,
-                               values=["Automobile", "Petroleum", "Steel"], state="readonly")
-    sector_combo.pack(pady=5)
+    # Company selection
+    tk.Label(window, text="Select Sector:", font=("Arial", 12), bg="white").pack(pady=5)
+    sector_var = tk.StringVar(value="Automobile")
+    sector_options = ["Automobile", "Petroleum", "Steel", "Gold"]
+    ttk.Combobox(window, values=sector_options, textvariable=sector_var, state="readonly").pack(pady=5)
 
-    tk.Label(trade_win, text="Select Company:", font=("Arial", 11), bg="white").pack()
+    tk.Label(window, text="Select Company:", font=("Arial", 12), bg="white").pack(pady=5)
     company_var = tk.StringVar()
-    company_combo = ttk.Combobox(trade_win, textvariable=company_var, state="readonly")
+    company_combo = ttk.Combobox(window, values=list(AUTO_COMPANIES.keys()), textvariable=company_var, state="readonly")
     company_combo.pack(pady=5)
 
-    price_var = tk.StringVar(value="Price: -")
-    tk.Label(trade_win, textvariable=price_var, font=("Arial", 11, "italic"), bg="white").pack()
-
-    def update_companies(event):
-        if sector_var.get() == "Automobile":
-            company_combo["values"] = list(AUTO_COMPANIES.keys())
-        elif sector_var.get() == "Petroleum":
-            company_combo["values"] = list(PETROLEUM_COMPANIES.keys())
-        elif sector_var.get() == "Steel":
-            company_combo["values"] = list(STEEL_COMPANIES.keys())
+    def update_company_list(*args):
+        sector = sector_var.get()
+        if sector == "Automobile":
+            company_combo.config(values=list(AUTO_COMPANIES.keys()))
+        elif sector == "Petroleum":
+            company_combo.config(values=list(PETROLEUM_COMPANIES.keys()))
+        elif sector == "Steel":
+            company_combo.config(values=list(STEEL_COMPANIES.keys()))
+        elif sector == "Gold":
+            company_combo.config(values=list(GOLD_COMPANIES.keys()))
         company_var.set("")
-        price_var.set("Price: -")
 
-    def update_price_and_open_chart(event):
-        comp = company_var.get()
-        if comp:
-            price_var.set(f"Price: ₹{PRICES.get(comp, '-')}")
-            entry = PRICES.get(comp, CHART_PRICE_START)
-            last_buy_price = user_data.get("last_buy_price", {}).get(comp, entry)
-            open_dummy_candlestick_chart(user_email=user_email, company=comp, entry_price=last_buy_price, side="BUY", title=f"Dummy Chart - {comp}")
+    sector_var.trace("w", update_company_list)
 
-    sector_combo.bind("<<ComboboxSelected>>", update_companies)
-    company_combo.bind("<<ComboboxSelected>>", update_price_and_open_chart)
+    # Buy/Sell quantity
+    tk.Label(window, text="Quantity:", font=("Arial", 12), bg="white").pack(pady=5)
+    quantity_entry = tk.Entry(window, font=("Arial", 12), width=10)
+    quantity_entry.pack(pady=5)
 
-    tk.Label(trade_win, text="Quantity:", font=("Arial", 11, "bold"), bg="white").pack()
-    qty_entry = tk.Entry(trade_win, font=("Arial", 11))
-    qty_entry.pack(pady=5)
+    def perform_trade(side):
+        company = company_var.get()
+        if not company:
+            messagebox.showerror("Error", "Please select a company.")
+            return
+        try:
+            qty = int(quantity_entry.get())
+        except ValueError:
+            messagebox.showerror("Error", "Enter a valid quantity!")
+            return
 
-    def commit_and_refresh():
+        price = PRICES.get(company, 10)
+        total_cost = price * qty
+
+        if side == "BUY":
+            if user_data["balance"] < total_cost:
+                messagebox.showerror("Error", "Insufficient balance!")
+                return
+            user_data["balance"] -= total_cost
+            user_data["shares"][company] = user_data["shares"].get(company, 0) + qty
+            user_data["last_buy_price"][company] = price
+            messagebox.showinfo("Success", f"Bought {qty} shares of {company} at ₹{price} each.")
+        else:  # SELL
+            if user_data["shares"].get(company, 0) < qty:
+                messagebox.showerror("Error", "Not enough shares to sell!")
+                return
+            user_data["shares"][company] -= qty
+            profit = price * qty
+            add_profit_to_balance(user_data, profit)
+            messagebox.showinfo("Success", f"Sold {qty} shares of {company} at ₹{price} each.")
+
         save_users(users)
-        bal_var.set(f"Balance: ₹{user_data['balance']}")
+        tk.Label(window, text=f"Balance: ₹{user_data['balance']}", font=("Arial", 14), bg="white", fg="blue").pack(pady=5)
 
-    def buy_stock():
+    tk.Button(window, text="Buy", font=("Arial", 12, "bold"), bg="green", fg="white",
+              command=lambda: perform_trade("BUY")).pack(pady=5)
+    tk.Button(window, text="Sell", font=("Arial", 12, "bold"), bg="red", fg="white",
+              command=lambda: perform_trade("SELL")).pack(pady=5)
+
+    # Open Screener link
+    def open_company_link():
         company = company_var.get()
-        qty_txt = qty_entry.get().strip()
         if not company:
-            messagebox.showerror("Error", "Please select a company.")
+            messagebox.showerror("Error", "Select a company first!")
             return
-        if not qty_txt.isdigit() or int(qty_txt) <= 0:
-            messagebox.showerror("Error", "Enter a valid positive quantity.")
-            return
-        qty = int(qty_txt)
-        unit = PRICES.get(company, 0)
-        cost = unit * qty
-        if user_data["balance"] < cost:
-            messagebox.showerror("Error", f"Insufficient balance. Need ₹{cost}, have ₹{user_data['balance']}.")
-            return
-        user_data["balance"] -= cost
-        if company in user_data["shares"]:
-            user_data["shares"][company] += qty
-        elif company in user_data["petroleum_shares"]:
-            user_data["petroleum_shares"][company] += qty
-        elif company in user_data["steel_shares"]:
-            user_data["steel_shares"][company] += qty
+        sector = sector_var.get()
+        if sector == "Automobile":
+            open_link(AUTO_COMPANIES[company])
+        elif sector == "Petroleum":
+            open_link(PETROLEUM_COMPANIES[company])
+        elif sector == "Steel":
+            open_link(STEEL_COMPANIES[company])
+        elif sector == "Gold":
+            open_link(GOLD_COMPANIES[company])
 
-        # Store last buy price for company
-        if "last_buy_price" not in user_data:
-            user_data["last_buy_price"] = {}
-        user_data["last_buy_price"][company] = unit
+    tk.Button(window, text="Open Company Screener Page", font=("Arial", 12), bg="orange", fg="white",
+              command=open_company_link).pack(pady=10)
 
-        commit_and_refresh()
-        messagebox.showinfo("Success", f"Bought {qty} shares of {company} for ₹{cost}.")
-
-    def sell_stock():
-        company = company_var.get()
-        qty_txt = qty_entry.get().strip()
-        if not company:
-            messagebox.showerror("Error", "Please select a company.")
-            return
-        if not qty_txt.isdigit() or int(qty_txt) <= 0:
-            messagebox.showerror("Error", "Enter a valid positive quantity.")
-            return
-        qty = int(qty_txt)
-
-        portfolio_key = None
-        if company in user_data["shares"]:
-            portfolio_key = "shares"
-        elif company in user_data["petroleum_shares"]:
-            portfolio_key = "petroleum_shares"
-        elif company in user_data["steel_shares"]:
-            portfolio_key = "steel_shares"
-
-        if portfolio_key is None:
-            messagebox.showerror("Error", "Invalid company.")
-            return
-
-        if user_data[portfolio_key].get(company, 0) < qty:
-            messagebox.showerror("Error", "Not enough shares to sell.")
-            return
-
-        user_data[portfolio_key][company] -= qty
-        earnings = PRICES.get(company, 0) * qty
-        user_data["balance"] += earnings
-        commit_and_refresh()
-        messagebox.showinfo("Success", f"Sold {qty} shares of {company} for ₹{earnings}.")
-
-    tk.Button(trade_win, text="Buy", font=("Arial", 12, "bold"), bg="green", fg="white", command=buy_stock).pack(pady=5)
-    tk.Button(trade_win, text="Sell", font=("Arial", 12, "bold"), bg="red", fg="white", command=sell_stock).pack(pady=5)
-
-    btns = tk.Frame(trade_win, bg="white")
-    btns.pack(pady=10)
-    tk.Button(btns, text="Automobile Portfolio", command=lambda: show_auto_shares_window(user_email)).grid(row=0, column=0, padx=5)
-    tk.Button(btns, text="Petroleum Portfolio", command=lambda: show_petroleum_shares_window(user_email)).grid(row=0, column=1, padx=5)
-    tk.Button(btns, text="Steel Portfolio", command=lambda: show_steel_shares_window(user_email)).grid(row=0, column=2, padx=5)
-
-
-# ----------------------------
-# Shares display windows
-# ----------------------------
-def show_auto_shares_window(user_email):
-    users = load_users()
-    if user_email not in users:
-        messagebox.showerror("Error", "User not found.")
-        return
-    user_data = users[user_email]
-    shares_data = user_data.get("shares", {})
-    win = tk.Toplevel(root)
-    win.title(f"{user_data['name']}'s Automobile Portfolio")
-    for company, qty in shares_data.items():
-        tk.Label(win, text=f"{company}: {qty} shares").pack()
-
-
-def show_petroleum_shares_window(user_email):
-    users = load_users()
-    if user_email not in users:
-        messagebox.showerror("Error", "User not found.")
-        return
-    user_data = users[user_email]
-    shares_data = user_data.get("petroleum_shares", {})
-    win = tk.Toplevel(root)
-    win.title(f"{user_data['name']}'s Petroleum Portfolio")
-    for company, qty in shares_data.items():
-        tk.Label(win, text=f"{company}: {qty} shares").pack()
-
-
-def show_steel_shares_window(user_email):
-    users = load_users()
-    if user_email not in users:
-        messagebox.showerror("Error", "User not found.")
-        return
-    user_data = users[user_email]
-    shares_data = user_data.get("steel_shares", {})
-    win = tk.Toplevel(root)
-    win.title(f"{user_data['name']}'s Steel Portfolio")
-    win.geometry("520x500")
-    win.configure(bg="white")
-    frame = tk.Frame(win, bg="white")
-    frame.pack(pady=10)
-    tk.Label(frame, text="Company", font=("Arial", 12, "bold"), width=25, anchor="w", bg="white").grid(row=0, column=0)
-    tk.Label(frame, text="Shares", font=("Arial", 12, "bold"), width=10, anchor="center", bg="white").grid(row=0, column=1)
-    tk.Label(frame, text="Price", font=("Arial", 12, "bold"), width=10, anchor="center", bg="white").grid(row=0, column=2)
-    tk.Label(frame, text="Link", font=("Arial", 12, "bold"), width=10, anchor="center", bg="white").grid(row=0, column=3)
-    for i, (company, shares) in enumerate(shares_data.items(), start=1):
-        tk.Label(frame, text=company, font=("Arial", 11), width=25, anchor="w", bg="white").grid(row=i, column=0, pady=2)
-        tk.Label(frame, text=str(shares), font=("Arial", 11), width=10, anchor="center", bg="white").grid(row=i, column=1, pady=2)
-        tk.Label(frame, text=f"₹{PRICES.get(company, '-')}", font=("Arial", 11), width=10, anchor="center", bg="white").grid(row=i, column=2, pady=2)
-        tk.Button(frame, text="View", font=("Arial", 10, "bold"), fg="blue", cursor="hand2",
-                  command=lambda url=STEEL_COMPANIES.get(company, "#"): open_link(url)).grid(row=i, column=3, pady=2)
-
-
-# ----------------------------
-# Admin functions
-# ----------------------------
-ADMIN_PASSWORD = "admin123"
-
-
+# -------------------- Admin Password --------------------
 def check_admin_password():
-    pass_win = tk.Toplevel(root)
-    pass_win.title("Admin Login")
-    pass_win.geometry("300x200")
-    pass_win.configure(bg="white")
-    admin_img = load_image(IMAGE_PATHS.get("admin", ""), (80, 80))
-    if admin_img:
-        admin_label = tk.Label(pass_win, image=admin_img, bg="white")
-        admin_label.image = admin_img
-        admin_label.pack(pady=5)
-    tk.Label(pass_win, text="🔑 Enter Admin Password", font=("Arial", 12, "bold"), bg="white").pack(pady=5)
-    pwd_entry = tk.Entry(pass_win, font=("Arial", 12), show="*")
-    pwd_entry.pack(pady=5)
+    pwd = simpledialog.askstring("Admin Login", "Enter admin password:", show="*")
+    if pwd == ADMIN_PASSWORD:
+        show_admin_dashboard()
+    else:
+        messagebox.showerror("Error", "Incorrect admin password!")
 
-    def verify():
-        if pwd_entry.get().strip() == ADMIN_PASSWORD:
-            pass_win.destroy()
-            show_all_registrations()
-        else:
-            messagebox.showerror("Access Denied", "Incorrect password!")
+def show_admin_dashboard():
+    regs = load_registrations()
+    admin_window = tk.Toplevel()
+    admin_window.title("Admin Dashboard")
+    admin_window.geometry("500x500")
+    tk.Label(admin_window, text="Registered Users", font=("Arial", 16, "bold")).pack(pady=10)
 
-    tk.Button(pass_win, text="Login", font=("Arial", 12, "bold"), bg="blue", fg="white", command=verify).pack(pady=10)
+    for r in regs:
+        tk.Label(admin_window, text=f"{r['name']} ({r['email']}) - Bonus: ₹{r['bonus']}").pack(pady=2)
 
+# -------------------- Run App --------------------
+if __name__ == "__main__":
+    root = create_main_window()
+    root.mainloop()
 
-def show_all_registrations():
-    records = load_registrations()
-    if not records:
-        messagebox.showinfo("Info", "No registrations found.")
+# -------------------- Candlestick Chart --------------------
+def show_candlestick_chart():
+    company = company_var.get()
+    if not company:
+        messagebox.showerror("Error", "Select a company first!")
         return
-    admin_win = tk.Toplevel(root)
-    admin_win.title("Company Records - All Registrations")
-    admin_win.geometry("650x450")
-    admin_win.configure(bg="white")
-    tk.Label(admin_win, text="All User Registrations", font=("Arial", 14, "bold"), bg="white").pack(pady=5)
-    frame = tk.Frame(admin_win, bg="white")
-    frame.pack(pady=10)
-    tk.Label(frame, text="Name", font=("Arial", 12, "bold"), width=20, anchor="w", bg="white").grid(row=0, column=0)
-    tk.Label(frame, text="Email", font=("Arial", 12, "bold"), width=30, anchor="w", bg="white").grid(row=0, column=1)
-    tk.Label(frame, text="Bonus", font=("Arial", 12, "bold"), width=10, anchor="center", bg="white").grid(row=0, column=2)
-    for i, user in enumerate(records, start=1):
-        tk.Label(frame, text=user.get("name", ""), font=("Arial", 11), width=20, anchor="w", bg="white").grid(row=i, column=0, pady=2)
-        tk.Label(frame, text=user.get("email", ""), font=("Arial", 11), width=30, anchor="w", bg="white").grid(row=i, column=1, pady=2)
-        tk.Label(frame, text=f"₹{user.get('bonus', 0)}", font=("Arial", 11), width=10, anchor="center", bg="white").grid(row=i, column=2, pady=2)
 
+    # Simulate OHLC data for 10 days
+    import matplotlib.pyplot as plt
+    import matplotlib.dates as mdates
+    from datetime import datetime, timedelta
+    import random
 
-# ----------------------------
-# Main GUI: registration form
-# ----------------------------
-root = tk.Tk()
-root.title("Stock Market - Registration")
-root.geometry("420x640")
-root.configure(bg="white")
+    days = 10
+    base_price = PRICES.get(company, 10)
+    dates = [datetime.now() - timedelta(days=i) for i in range(days)][::-1]
+    ohlc_data = []
 
-logo_img = load_image(IMAGE_PATHS.get("logo", ""), (500, 320))
-if logo_img:
-    logo_label = tk.Label(root, image=logo_img, bg="white")
-    logo_label.image = logo_img
-    logo_label.pack(pady=8)
+    last_close = base_price
+    for _ in range(days):
+        open_price = round(last_close + random.uniform(-2, 2), 2)
+        high = round(open_price + random.uniform(0, 3), 2)
+        low = round(open_price - random.uniform(0, 3), 2)
+        close = round(low + random.uniform(0, high - low), 2)
+        ohlc_data.append((open_price, high, low, close))
+        last_close = close
 
-tk.Label(root, text="📈 Stock Market", font=("Arial", 20, "bold"), bg="white").pack(pady=6)
+    # Plot Candlestick chart
+    fig, ax = plt.subplots()
+    for i, (o, h, l, c) in enumerate(ohlc_data):
+        color = "green" if c >= o else "red"
+        ax.plot([dates[i], dates[i]], [l, h], color=color)
+        ax.plot([dates[i]-timedelta(hours=0.2), dates[i]+timedelta(hours=0.2)], [o, o], color=color, linewidth=5)
+        ax.plot([dates[i]-timedelta(hours=0.2), dates[i]+timedelta(hours=0.2)], [c, c], color=color, linewidth=5)
 
-tk.Label(root, text="Name:", font=("Arial", 12), bg="white").pack()
-entry_name = tk.Entry(root, font=("Arial", 12))
-entry_name.pack(pady=5)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b'))
+    plt.title(f"{company} - Last {days} Days")
+    plt.xlabel("Date")
+    plt.ylabel("Price (₹)")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
-tk.Label(root, text="Email:", font=("Arial", 12), bg="white").pack()
-entry_email = tk.Entry(root, font=("Arial", 12))
-entry_email.pack(pady=5)
+# Button to open chart
+tk.Button(window, text="Show Candlestick Chart", font=("Arial", 12), bg="purple", fg="white",
+          command=show_candlestick_chart).pack(pady=10)
 
-tk.Label(root, text="Password:", font=("Arial", 12), bg="white").pack()
-entry_password = tk.Entry(root, font=("Arial", 12), show="*")
-entry_password.pack(pady=5)
+# Store OHLC history for each company
+ohlc_history = {}
 
-register_btn = tk.Button(root, text="Register", font=("Arial", 12, "bold"), bg="green", fg="white",
-                         command=lambda: register_user_callback(entry_name, entry_email, entry_password))
-register_btn.pack(pady=12)
+def update_ohlc(company, price):
+    from datetime import datetime
+    import random
 
-quick = tk.Frame(root, bg="white")
-quick.pack()
-tk.Button(quick, text="Company Records (Admin)", font=("Arial", 12, "bold"), bg="blue", fg="white",
-          command=check_admin_password).grid(row=0, column=0, padx=4, pady=4)
+    # Initialize if first time
+    if company not in ohlc_history:
+        ohlc_history[company] = []
 
-tk.Button(root, text="Open Dummy Trading Chart (Standalone)", bg="orange",
-          command=lambda: open_dummy_candlestick_chart(user_email=None, company=None, entry_price=100.0, side="BUY", title="Standalone Dummy Chart")
-          )
+    # Previous close
+    last_close = ohlc_history[company][-1][3] if ohlc_history[company] else price
 
-root.mainloop()
+    # Generate random OHLC around the trade price
+    open_price = round(last_close + random.uniform(-1, 1), 2)
+    high = round(max(open_price, price) + random.uniform(0, 1), 2)
+    low = round(min(open_price, price) - random.uniform(0, 1), 2)
+    close = round(price, 2)
+
+    ohlc_history[company].append((open_price, high, low, close))
+
+    # Keep only last 10 entries
+    if len(ohlc_history[company]) > 10:
+        ohlc_history[company].pop(0)
+
+def show_candlestick_chart():
+    company = company_var.get()
+    if not company:
+        messagebox.showerror("Error", "Select a company first!")
+        return
+
+    import matplotlib.pyplot as plt
+    import matplotlib.dates as mdates
+    from datetime import datetime, timedelta
+
+    if company not in ohlc_history or not ohlc_history[company]:
+        messagebox.showinfo("Info", "No trade data yet for this company.")
+        return
+
+    ohlc_data = ohlc_history[company]
+    days = len(ohlc_data)
+    dates = [datetime.now() - timedelta(days=i) for i in range(days)][::-1]
+
+    fig, ax = plt.subplots()
+    for i, (o, h, l, c) in enumerate(ohlc_data):
+        color = "green" if c >= o else "red"
+        ax.plot([dates[i], dates[i]], [l, h], color=color)
+        ax.plot([dates[i]-timedelta(hours=0.2), dates[i]+timedelta(hours=0.2)], [o, o], color=color, linewidth=5)
+        ax.plot([dates[i]-timedelta(hours=0.2), dates[i]+timedelta(hours=0.2)], [c, c], color=color, linewidth=5)
+
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b'))
+    plt.title(f"{company} - Last {days} Trades")
+    plt.xlabel("Date")
+    plt.ylabel("Price (₹)")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+def draw_candlestick_chart(frame, company):
+    frame.destroy()  # Remove previous canvas if any
+
+    if company not in ohlc_history or not ohlc_history[company]:
+        return tk.Label(root, text="No trade data yet for this company.").pack()
+
+    ohlc_data = ohlc_history[company]
+    days = len(ohlc_data)
+    dates = [datetime.now() - timedelta(days=i) for i in range(days)][::-1]
+
+    fig, ax = plt.subplots(figsize=(6,4))
+    for i, (o, h, l, c) in enumerate(ohlc_data):
+        color = "green" if c >= o else "red"
+        ax.plot([dates[i], dates[i]], [l, h], color=color)
+        ax.plot([dates[i]-timedelta(hours=0.2), dates[i]+timedelta(hours=0.2)], [o, o], color=color, linewidth=5)
+        ax.plot([dates[i]-timedelta(hours=0.2), dates[i]+timedelta(hours=0.2)], [c, c], color=color, linewidth=5)
+
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%b'))
+    ax.set_title(f"{company} - Last {days} Trades")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Price (₹)")
+    ax.grid(True)
+    plt.tight_layout()
+
+    # Embed in Tkinter
+    canvas = FigureCanvasTkAgg(fig, master=root)
+    canvas.draw()
+    canvas.get_tk_widget().pack()
+    return canvas.get_tk_widget()
+
+# Clear previous chart and draw new one
+if 'chart_frame' in globals():
+    chart_frame.destroy()
+chart_frame = draw_candlestick_chart(chart_frame if 'chart_frame' in globals() else tk.Frame(root), company)
+
+chart_frame = tk.Frame(root)
+chart_frame.pack()
