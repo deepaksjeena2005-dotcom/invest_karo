@@ -1254,14 +1254,14 @@
     "yashraj123@gmail.com": {
         "name": "yashraj",
         "password": "yashraj",
-        "balance": 10.0,
+        "balance": 0.0,
         "shares": {
             "Honda": 0,
             "Hyundai": 0,
             "Tata Motors": 0,
             "Mahindra & Mahindra": 0,
             "Maruti Suzuki": 0,
-            "Ashok Leyland": 0,
+            "Ashok Leyland": 1,
             "JSW Steel": 1
         },
         "petroleum_shares": {
@@ -1289,7 +1289,8 @@
             "Bharat Petroleum": 15,
             "Hindustan Petroleum": 15,
             "JSW Steel": 20,
-            "NMDC Steel": 20
+            "NMDC Steel": 20,
+            "Ashok Leyland": 10
         },
         "bonus": 100,
         "created": "2025-09-29 13:12:14.160338"
@@ -1297,7 +1298,51 @@
     "d123@gmail.com": {
         "name": "d",
         "password": "fatherji",
-        "balance": 90,
+        "balance": 15.0,
+        "shares": {
+            "Honda": 0,
+            "Hyundai": 3,
+            "Tata Motors": 1,
+            "Mahindra & Mahindra": 1,
+            "Maruti Suzuki": 3,
+            "Ashok Leyland": 1
+        },
+        "petroleum_shares": {
+            "Reliance Industries": 0,
+            "Indian Oil Corporation": 0,
+            "Bharat Petroleum": 0,
+            "Hindustan Petroleum": 0,
+            "Oil India": 1
+        },
+        "steel_shares": {
+            "Tata Steel": 0,
+            "JSW Steel": 0,
+            "Steel Authority of India (SAIL)": 0,
+            "Jindal Steel & Power": 0,
+            "NMDC Steel": 0
+        },
+        "gold_shares": {
+            "Titan": 0,
+            "Muthoot Finance": 0,
+            "Manappuram Finance": 0,
+            "Rajesh Exports": 0,
+            "PC Jeweller": 0
+        },
+        "last_buy_price": {
+            "Maruti Suzuki": 10,
+            "Oil India": 15,
+            "Hyundai": 10,
+            "Ashok Leyland": 10,
+            "Mahindra & Mahindra": 10,
+            "Tata Motors": 10
+        },
+        "bonus": 100,
+        "created": "2025-09-30 22:08:15.572193"
+    },
+    "n1@gmail.com": {
+        "name": "n",
+        "password": "fatherji",
+        "balance": 90.0,
         "shares": {
             "Honda": 0,
             "Hyundai": 0,
@@ -1331,6 +1376,6 @@
             "Maruti Suzuki": 10
         },
         "bonus": 100,
-        "created": "2025-09-30 22:08:15.572193"
+        "created": "2025-10-01 12:59:19.404807"
     }
 }
