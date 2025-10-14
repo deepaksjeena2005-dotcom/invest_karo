@@ -439,9 +439,94 @@ def buy_sell_window(user_email):
 
     tk.Button(trade_win, text="Open Chart", font=("Arial", 14), command=open_chart).pack(pady=12)
 
+    def add_app_name_label(frame):
+        tk.Label(
+        frame,
+        text="INVESTKARO",
+        font=("Arial", 24, "bold"),
+        fg="black",
+        bg="white"
+    ).pack(pady=(18, 5))
+        def check_admin_password():
+            admin_win = tk.Toplevel()
+            admin_win.title("Admin Login")
+            admin_win.geometry("300x250")
+            admin_win.configure(bg="white")
+            tk.Label(admin_win, text="🔐 Admin Access", font=("Arial", 16, "bold"), bg="white").pack(pady=20)
+            tk.Label(admin_win, text="Enter Admin Password:", font=("Arial", 12), bg="white").pack()
+            pwd_entry = tk.Entry(admin_win, font=("Arial", 12), show="*")
+            pwd_entry.pack(pady=10)
+            def verify():
+                if pwd_entry.get().strip() == ADMIN_PASSWORD:
+                    admin_win.destroy()
+                    show_admin_dashboard()
+                else:
+                    messagebox.showerror("Access Denied", "Incorrect admin password!")
+            pwd_entry.delete(0, tk.END)
+            tk.Button(admin_win, text="Login", font=("Arial", 12, "bold"), bg="red", fg="white", command=verify).pack(pady=10)
+
+def show_admin_dashboard():
+    users = load_users()
+    if not users:
+        messagebox.showinfo("Info", "No users found in database.")
+        return
+
+    admin_dash = tk.Toplevel()
+    admin_dash.title("Admin Dashboard - All Users")
+    admin_dash.geometry("1100x600")
+    admin_dash.configure(bg="white")
+
+    tk.Label(admin_dash, text="📊 Admin Dashboard - User Records", font=("Arial", 16, "bold"), bg="red", fg="white").pack(fill="x", pady=5)
+
+    canvas = tk.Canvas(admin_dash, bg="white")
+    scrollbar = ttk.Scrollbar(admin_dash, orient="vertical", command=canvas.yview)
+    scrollable_frame = tk.Frame(canvas, bg="white")
+
+    scrollable_frame.bind(
+        "<Configure>",
+        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+    )
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scrollbar.set)
+
+    headers = ["Name", "Email", "Balance", "Auto Stocks", "Petro Stocks", "Steel Stocks", "Gold Stocks", "Total Portfolio"]
+    for i, header in enumerate(headers):
+        tk.Label(scrollable_frame, text=header, font=("Arial", 11, "bold"), width=15, bg="lightgray", relief="ridge").grid(row=0, column=i, padx=1, pady=1)
+
+    for row, (email, user) in enumerate(users.items(), start=1):
+        auto_total = sum(user.get("shares", {}).values())
+        petro_total = sum(user.get("petroleum_shares", {}).values())
+        steel_total = sum(user.get("steel_shares", {}).values())
+        gold_total = sum(user.get("gold_shares", {}).values())
+
+        auto_value = sum(shares * PRICES.get(company, 0) for company, shares in user.get("shares", {}).items())
+        petro_value = sum(shares * PRICES.get(company, 0) for company, shares in user.get("petroleum_shares", {}).items())
+        steel_value = sum(shares * PRICES.get(company, 0) for company, shares in user.get("steel_shares", {}).items())
+        gold_value = sum(shares * PRICES.get(company, 0) for company, shares in user.get("gold_shares", {}).items())
+        total_portfolio = auto_value + petro_value + steel_value + gold_value
+
+        data = [
+            user.get("name", ""),
+            email,
+            f"₹{user.get('balance', 0)}",
+            f"{auto_total} (₹{auto_value})",
+            f"{petro_total} (₹{petro_value})",
+            f"{steel_total} (₹{steel_value})",
+            f"{gold_total} (₹{gold_value})",
+            f"₹{total_portfolio}"
+        ]
+
+        for col, value in enumerate(data):
+            tk.Label(scrollable_frame, text=str(value), font=("Arial", 10), width=15, bg="white", relief="ridge").grid(row=row, column=col, padx=1, pady=1)
+
+    canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+
     # Navigation and extras can be added here (portfolios, logout, exit, etc.)
 
 # --- Main GUI Window Setup ---
+
+
 def create_main_window():
     root = tk.Tk()
     root.title("InvestKaro - Stock Market Simulator")
@@ -453,33 +538,59 @@ def create_main_window():
     notebook = ttk.Notebook(root)
     notebook.pack(pady=20, expand=True, fill="both", padx=20)
 
-    # Signup tab
+    # --- Signup tab ---
     signup_frame = tk.Frame(notebook, bg="white")
     notebook.add(signup_frame, text="Sign Up")
 
-    tk.Label(signup_frame, text="Create New Account", font=("Arial", 18, "bold"), bg="white", fg="green").pack(pady=20)
+    # ✅ Add only the logo (no text branding)
+    try:
+        logo_img = Image.open("C:\\Users\\neham\\Downloads\\IK.png.png")  # place your logo in same folder
+        logo_img = logo_img.resize((400, 400))
+        logo_photo = ImageTk.PhotoImage(logo_img)
+        logo_label = tk.Label(signup_frame, image=logo_photo, bg="white")
+        logo_label.image = logo_photo  # prevent garbage collection
+        logo_label.pack(pady=(10, 5))
+    except Exception as e:
+        print("Logo not found:", e)
+
+    # Removed "INVESTKARO" text label
+
+    tk.Label(signup_frame, text="Create New Account", font=("Arial", 18, "bold"), bg="white", fg="green").pack(pady=10)
     tk.Label(signup_frame, text="Full Name:", font=("Arial", 12), bg="white").pack()
     signup_name_entry = tk.Entry(signup_frame, font=("Arial", 12), width=25)
     signup_name_entry.pack(pady=5)
+
     tk.Label(signup_frame, text="Email Address:", font=("Arial", 12), bg="white").pack()
     signup_email_entry = tk.Entry(signup_frame, font=("Arial", 12), width=25)
     signup_email_entry.pack(pady=5)
+
     tk.Label(signup_frame, text="Password:", font=("Arial", 12), bg="white").pack()
     signup_password_entry = tk.Entry(signup_frame, font=("Arial", 12), show="*", width=25)
     signup_password_entry.pack(pady=5)
 
     def handle_signup():
-        success = auth_manager.signup_user(signup_name_entry.get().strip(), signup_email_entry.get().strip(), signup_password_entry.get())
+        success = auth_manager.signup_user(
+            signup_name_entry.get().strip(),
+            signup_email_entry.get().strip(),
+            signup_password_entry.get()
+        )
         if success:
             signup_name_entry.delete(0, tk.END)
             signup_email_entry.delete(0, tk.END)
             signup_password_entry.delete(0, tk.END)
             notebook.select(1)
 
-    tk.Button(signup_frame, text="Create Account", font=("Arial", 14, "bold"), bg="green", fg="white",
-              command=handle_signup, width=15).pack(pady=20)
+    tk.Button(
+        signup_frame,
+        text="Create Account",
+        font=("Arial", 14, "bold"),
+        bg="green",
+        fg="white",
+        command=handle_signup,
+        width=15
+    ).pack(pady=20)
 
-    # Login tab
+    # --- Login tab ---
     login_frame = tk.Frame(notebook, bg="white")
     notebook.add(login_frame, text="Login")
 
@@ -487,6 +598,7 @@ def create_main_window():
     tk.Label(login_frame, text="Email Address:", font=("Arial", 12), bg="white").pack()
     login_email_entry = tk.Entry(login_frame, font=("Arial", 12), width=25)
     login_email_entry.pack(pady=5)
+
     tk.Label(login_frame, text="Password:", font=("Arial", 12), bg="white").pack()
     login_password_entry = tk.Entry(login_frame, font=("Arial", 12), show="*", width=25)
     login_password_entry.pack(pady=5)
@@ -498,10 +610,76 @@ def create_main_window():
             login_password_entry.delete(0, tk.END)
             buy_sell_window(user_email)
 
-    tk.Button(login_frame, text="Login", font=("Arial", 14, "bold"), bg="blue", fg="white",
-              command=handle_login, width=15).pack(pady=20)
+    tk.Button(
+        login_frame,
+        text="Login",
+        font=("Arial", 14, "bold"),
+        bg="blue",
+        fg="white",
+        command=handle_login,
+        width=15
+    ).pack(pady=20)
 
     return root
+
+def add_admin_tab(notebook):
+    admin_frame = tk.Frame(notebook, bg="white")
+    notebook.add(admin_frame, text="Admin")
+
+    tk.Label(admin_frame, text="Admin Login", font=("Arial", 18, "bold"), bg="white", fg="red").pack(pady=15)
+
+    tk.Label(admin_frame, text="Enter Admin Password:", font=("Arial", 12), bg="white").pack(pady=5)
+    admin_pass_entry = tk.Entry(admin_frame, font=("Arial", 12), show="*", width=25)
+    admin_pass_entry.pack(pady=5)
+
+    # Frame to display admin content
+    admin_content = tk.Frame(admin_frame, bg="white")
+
+    def show_admin_panel():
+        admin_content.pack(fill=tk.BOTH, expand=True, pady=10)
+        for widget in admin_content.winfo_children():
+            widget.destroy()
+
+        tk.Label(admin_content, text="Admin Dashboard", font=("Arial", 16, "bold"), bg="white", fg="green").pack(pady=5)
+
+        users = load_users()
+        regs = load_registrations()
+
+        # --- Registered Users Section ---
+        tk.Label(admin_content, text="Registered Users:", font=("Arial", 13, "bold"), bg="white").pack()
+        users_box = tk.Text(admin_content, height=10, width=65, wrap="word", bg="#f0f0f0")
+        users_box.pack(pady=5)
+        if users:
+            for email, details in users.items():
+                users_box.insert(tk.END, f"Name: {details['name']}\nEmail: {email}\nBalance: ₹{details['balance']}\nCreated: {details['created']}\n\n")
+        else:
+            users_box.insert(tk.END, "No users found.\n")
+
+        # --- Registration Log Section ---
+        tk.Label(admin_content, text="Signup Registrations:", font=("Arial", 13, "bold"), bg="white").pack()
+        regs_box = tk.Text(admin_content, height=8, width=65, wrap="word", bg="#f9f9f9")
+        regs_box.pack(pady=5)
+        if regs:
+            for entry in regs:
+                regs_box.insert(tk.END, f"Name: {entry['name']}, Email: {entry['email']}, Bonus: ₹{entry['bonus']}\n")
+        else:
+            regs_box.insert(tk.END, "No registrations recorded.\n")
+
+        tk.Button(admin_content, text="Refresh", bg="blue", fg="white", font=("Arial", 11, "bold"),
+                  command=show_admin_panel).pack(pady=10)
+
+    def handle_admin_login():
+        pwd = admin_pass_entry.get().strip()
+        if pwd == ADMIN_PASSWORD:
+            messagebox.showinfo("Access Granted", "Welcome, Admin!")
+            show_admin_panel()
+        else:
+            messagebox.showerror("Access Denied", "Incorrect admin password!")
+
+    tk.Button(admin_frame, text="Login as Admin", font=("Arial", 13, "bold"), bg="red", fg="white",
+              command=handle_admin_login).pack(pady=10)
+
+
 
 if __name__ == "__main__":
     root = create_main_window()

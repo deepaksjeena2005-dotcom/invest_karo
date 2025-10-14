@@ -273,7 +273,24 @@ def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", t
             price_entry.delete(0, tk.END)
         except Exception:
             messagebox.showerror("Error", "Invalid price")
-            
+            def withdraw_all():
+                latest_price = last_close
+                break_even_price = effective_entry_price
+                if SIDE == "BUY":
+                    can_withdraw = latest_price >= break_even_price
+                else:
+                    can_withdraw = latest_price <= break_even_price
+                    if can_withdraw:
+                        current_total = latest_price * shares_owned
+                        user_data["balance"] += current_total
+                        users[user_email] = user_data
+                        save_users(users)
+                        messagebox.showinfo("Success", f"₹{current_total:.2f} (Invested + profit) credited to your trading balance.")
+            withdraw_btn.config(state="disabled")
+            if balance_update_callback:
+                balance_update_callback(user_data["balance"])
+        else:
+            messagebox.showinfo("Info", "Current price not above invested amount, cannot withdraw yet.")
 
     stop_flag = [False]
 
