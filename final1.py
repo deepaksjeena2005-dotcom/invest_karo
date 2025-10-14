@@ -6,13 +6,11 @@ from tkinter import simpledialog, messagebox, ttk
 from PIL import Image, ImageTk
 import datetime
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import mplfinance as mpf
 import pandas as pd
+import mplfinance as mpf
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-
-# Constants
+# --- Constants and sample data ---
 DB_FILE = "users.json"
 REG_FILE = "registrations.json"
 ADMIN_PASSWORD = "admin123"
@@ -54,12 +52,11 @@ PRICES = {
     **{c: 30 for c in GOLD_COMPANIES}
 }
 
-CHART_PRICE_START = 100.0
-CHART_MAX_POINTS = 200
 CHART_STEP_STD = 0.5
-CHART_UPDATE_INTERVAL = 60000
+CHART_MAX_POINTS = 200
+CHART_UPDATE_INTERVAL = 800
 
-
+# --- JSON helpers ---
 def safe_json_load(path, default):
     if not os.path.exists(path):
         return default
@@ -88,22 +85,12 @@ def save_registration(entry):
     regs.append(entry)
     save_json(REG_FILE, regs)
 
+# Get default zero shares
 def get_default_shares(companies):
     return {c: 0 for c in companies}
 
 def open_link(url):
     webbrowser.open(url)
-
-def load_image(path, size=None):
-    try:
-        if not os.path.exists(path):
-            return None
-        img = Image.open(path)
-        if size:
-            img = img.resize(size, Image.LANCZOS)
-        return ImageTk.PhotoImage(img)
-    except Exception:
-        return None
 
 def validate_email(email):
     return '@' in email and '.' in email.split('@')[-1]
@@ -111,10 +98,11 @@ def validate_email(email):
 def validate_password(pwd):
     return len(pwd) >= 6
 
+# --- Auth Manager ---
 class AuthManager:
     def __init__(self, root):
         self.root = root
-        
+
     def signup_user(self, name, email, password):
         if not (name and email and password):
             messagebox.showerror("Error", "All fields are required!")
@@ -157,17 +145,18 @@ class AuthManager:
         messagebox.showinfo("Welcome", f"Welcome back {users[email]['name']}! Balance: ₹{users[email]['balance']}")
         return email
 
-def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", title="Trading Chart"):
+# --- Candlestick Trading Chart ---
+def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", title="Trading Chart", balance_update_callback=None):
     ENTRY_PRICE = float(entry_price)
     SIDE = side.upper()
-    
+
     users = load_users()
     user_data = users.get(user_email)
     if not user_data:
         messagebox.showerror("Error", "User not found!")
         return
 
-    invested_amount = tk.simpledialog.askfloat("Investment", f"Enter amount invested in {company} shares:", minvalue=0.01)
+    invested_amount = simpledialog.askfloat("Investment", f"Enter amount invested in {company} shares:", minvalue=0.01)
     if invested_amount is None:
         return
 
@@ -184,9 +173,9 @@ def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", t
     if shares_owned == 0:
         messagebox.showinfo("No Shares", "You do not own any shares of this company.")
         return
-    
+
     effective_entry_price = invested_amount / shares_owned if shares_owned > 0 else ENTRY_PRICE
-    
+
     ohlc_data = []
     last_close = effective_entry_price
 
@@ -195,12 +184,33 @@ def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", t
     chart_win.geometry("950x600")
     chart_win.configure(bg="black")
 
-    fig = mpf.figure(style='charles', figsize=(9, 4.5), facecolor='black')
-    ax = fig.add_subplot(1, 1, 1)
-    fig.suptitle(title, color='white', fontsize=16)
+    fig = None
+    ax = None
+    canvas = None
 
-    canvas = FigureCanvasTkAgg(fig, master=chart_win)
-    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    def redraw_chart():
+        nonlocal fig, ax, canvas
+        if len(ohlc_data) == 0:
+            return
+        df = pd.DataFrame(ohlc_data, columns=["Open", "High", "Low", "Close"])
+        df.index = pd.date_range(start="2024-01-01", periods=len(ohlc_data), freq='min')
+        if fig is None or ax is None:
+            fig, axlist = mpf.plot(df, type='candle', style='charles', volume=False, returnfig=True)
+            ax = axlist[0]
+            if canvas is not None:
+                canvas.get_tk_widget().destroy()
+            canvas = FigureCanvasTkAgg(fig, master=chart_win)
+            canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        else:
+            ax.clear()
+            mpf.plot(df, ax=ax, type='candle', style='charles', volume=False, warn_too_much_data=10000)
+        current_price = df.iloc[-1]['Close']
+        abs_pl = (current_price - effective_entry_price) * shares_owned if SIDE == "BUY" else (effective_entry_price - current_price) * shares_owned
+        pct = (abs_pl / invested_amount) * 100 if invested_amount > 0 else 0
+        ax.set_facecolor("black")
+        ax.set_title(f"{title} | Current: ₹{current_price:.2f} | P/L: ₹{abs_pl:.2f} ({pct:.2f}%)", color='white')
+        ax.axhline(effective_entry_price, color="yellow", linestyle="--", linewidth=1.2)
+        canvas.draw_idle()
 
     def simulate_next_ohlc(last_close_val):
         o = last_close_val
@@ -209,39 +219,6 @@ def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", t
         l = min(o, c) - abs(np.random.normal(0, CHART_STEP_STD * 0.7))
         l = max(l, 0.01)
         return [o, h, l, c]
-
-    def compute_pl(current_price):
-        abs_pl = (current_price - effective_entry_price) * shares_owned if SIDE == "BUY" else (effective_entry_price - current_price) * shares_owned
-        pct = (abs_pl / invested_amount) * 100.0 if invested_amount > 0 else 0
-        return abs_pl, pct
-
-    def redraw_chart():
-        if len(ohlc_data) == 0:
-            return
-        df = pd.DataFrame(ohlc_data, columns=["Open", "High", "Low", "Close"])
-        df['Volume'] = 1
-        df.index = pd.date_range(start="2024-01-01", periods=len(ohlc_data), freq='min')
-        ax.clear()
-        mpf.plot(df, ax=ax, type='candle', style='charles', volume=False, warn_too_much_data=10000)
-        current_price = df.iloc[-1]['Close']
-        abs_pl, pct = compute_pl(current_price)
-        ax.set_facecolor("black")
-        ax.set_title(f"{title} | Current: ₹{current_price:.2f} | P/L: ₹{abs_pl:.2f} ({pct:.2f}%)", color='white')
-        ax.axhline(effective_entry_price, color="yellow", linestyle="--", linewidth=1.2)
-        canvas.draw_idle()
-
-    nonlocal_vars = {'withdraw_btn': None}
-
-    def withdraw_all():
-        latest_price = last_close
-        current_total = latest_price * shares_owned
-        # balance adjusted after withdrawal: remove invested, add current value
-        user_data["balance"] = user_data["balance"] - invested_amount + current_total
-        users[user_email] = user_data
-        save_users(users)
-        messagebox.showinfo("Success", f"₹{current_total:.2f} credited to your trading balance (profit/loss adjusted).")
-        if nonlocal_vars['withdraw_btn']:
-            nonlocal_vars['withdraw_btn'].config(state="disabled")
 
     def update_chart(_=None):
         nonlocal last_close
@@ -273,6 +250,25 @@ def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", t
         except Exception:
             messagebox.showerror("Error", "Invalid price")
 
+    def withdraw_all():
+        latest_price = last_close
+        break_even_price = effective_entry_price
+        if SIDE == "BUY":
+            can_withdraw = latest_price >= break_even_price
+        else:
+            can_withdraw = latest_price <= break_even_price
+        if can_withdraw:
+            current_total = latest_price * shares_owned
+            user_data["balance"] += current_total
+            users[user_email] = user_data
+            save_users(users)
+            messagebox.showinfo("Success", f"₹{current_total:.2f} (Invested + profit) credited to your trading balance.")
+            withdraw_btn.config(state="disabled")
+            if balance_update_callback:
+                balance_update_callback(user_data["balance"])
+        else:
+            messagebox.showinfo("Info", "Current price not above invested amount, cannot withdraw yet.")
+
     stop_flag = [False]
 
     def animation_loop():
@@ -286,22 +282,19 @@ def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", t
     control_frame = tk.Frame(chart_win, bg="black")
     control_frame.pack(fill=tk.X, pady=8)
 
-    tk.Label(control_frame, text="Set Next Price:", font=("Arial", 11), bg="black", fg="white").pack(side=tk.LEFT, padx=6)
-
+    # tk.Label(control_frame, text="Set Next Price:", font=("Arial", 11), bg="black", fg="white").pack(side=tk.LEFT, padx=6)
     price_entry = tk.Entry(control_frame, font=("Arial", 11), width=10, bg="gray", fg="white", insertbackground="white")
     price_entry.pack(side=tk.LEFT, padx=6)
-
     tk.Button(control_frame, text="Submit", font=("Arial", 11, "bold"), bg="white", fg="black", command=submit_manual_price).pack(side=tk.LEFT, padx=6)
 
-    nonlocal_vars['withdraw_btn'] = tk.Button(control_frame, text="Withdraw Profit", font=("Arial", 11, "bold"),
-                              bg="green", fg="white", command=withdraw_all)
-    nonlocal_vars['withdraw_btn'].pack(side=tk.LEFT, padx=6)
+    withdraw_btn = tk.Button(control_frame, text="Withdraw Profit", font=("Arial", 11, "bold"), bg="green", fg="white", command=withdraw_all)
+    withdraw_btn.pack(side=tk.LEFT, padx=6)
 
-    tk.Button(control_frame, text="Close Chart", font=("Arial", 11, "bold"), bg="red", fg="white",
-              command=lambda: (stop_flag.__setitem__(0, True), chart_win.destroy())).pack(side=tk.RIGHT, padx=8)
+    tk.Button(control_frame, text="Close Chart", font=("Arial", 11, "bold"), bg="red", fg="white", command=lambda: (stop_flag.__setitem__(0, True), chart_win.destroy())).pack(side=tk.RIGHT, padx=8)
 
     animation_loop()
 
+# --- Trading Window ---
 def buy_sell_window(user_email):
     users = load_users()
     if user_email not in users:
@@ -317,11 +310,13 @@ def buy_sell_window(user_email):
     bal_var = tk.StringVar(value=f"Balance: ₹{user_data['balance']}")
     tk.Label(trade_win, textvariable=bal_var, font=("Arial", 14, "bold"), bg="white", fg="green").pack(pady=10)
 
+    # Sector Selection
     tk.Label(trade_win, text="Select Sector:", font=("Arial", 12, "bold"), bg="white").pack()
     sector_var = tk.StringVar()
     sector_cb = ttk.Combobox(trade_win, textvariable=sector_var, state="readonly", values=["Automobile", "Petroleum", "Steel", "Gold"], font=("Arial", 11))
     sector_cb.pack(pady=6)
 
+    # Company Selection
     tk.Label(trade_win, text="Select Company:", font=("Arial", 12, "bold"), bg="white").pack()
     company_var = tk.StringVar()
     company_cb = ttk.Combobox(trade_win, textvariable=company_var, state="readonly", font=("Arial", 11))
@@ -418,9 +413,11 @@ def buy_sell_window(user_email):
         else:
             messagebox.showerror("Error", "Invalid company.")
             return
+
         if sh_dict.get(c, 0) < qty:
             messagebox.showerror("Error", "Not enough shares to sell.")
             return
+
         sh_dict[c] -= qty
         earnings = PRICES[c] * qty
         user_data["balance"] += earnings
@@ -434,103 +431,77 @@ def buy_sell_window(user_email):
     def open_chart():
         c = company_var.get()
         if c:
-            price = user_data.get("last_buy_price", {}).get(c, PRICES.get(c, CHART_PRICE_START))
-            open_dummy_candlestick_chart(user_email, c, price, side="BUY", title=f"Chart - {c}")
+            price = user_data.get("last_buy_price", {}).get(c, PRICES.get(c, 30))
+            open_dummy_candlestick_chart(
+                user_email, c, price, side="BUY", title=f"Chart - {c}",
+                balance_update_callback=lambda new_bal: bal_var.set(f"Balance: ₹{new_bal:.2f}")
+            )
 
     tk.Button(trade_win, text="Open Chart", font=("Arial", 14), command=open_chart).pack(pady=12)
 
-    portfolio_frame = tk.Frame(trade_win, bg="white")
-    portfolio_frame.pack(pady=10)
-    tk.Button(portfolio_frame, text="🚗 Auto Portfolio", font=("Arial", 11), bg="lightblue",
-              command=lambda: show_portfolio_window(user_email, "auto")).grid(row=0, column=0, padx=5)
-    tk.Button(portfolio_frame, text="⛽ Petroleum Portfolio", font=("Arial", 11), bg="orange",
-              command=lambda: show_portfolio_window(user_email, "petroleum")).grid(row=0, column=1, padx=5)
-    tk.Button(portfolio_frame, text="🏭 Steel Portfolio", font=("Arial", 11), bg="gray",
-              command=lambda: show_portfolio_window(user_email, "steel")).grid(row=0, column=2, padx=5)
-    tk.Button(portfolio_frame, text="🥇 Gold Portfolio", font=("Arial", 11), bg="gold",
-              command=lambda: show_portfolio_window(user_email, "gold")).grid(row=0, column=3, padx=5)
-    tk.Button(portfolio_frame, text="Refresh Balance", font=("Arial", 11), bg="yellow",
-              command=commit).grid(row=0, column=4, padx=5)
-    tk.Button(portfolio_frame, text="Logout", font=("Arial", 11), bg="pink",
-              command=trade_win.destroy).grid(row=0, column=5, padx=5)
-    tk.Button(portfolio_frame, text="Exit App", font=("Arial", 11), bg="red",
-              command=trade_win.quit).grid(row=0, column=6, padx=5)
+    # Navigation and extras can be added here (portfolios, logout, exit, etc.)
 
+# --- Main GUI Window Setup ---
+def create_main_window():
+    root = tk.Tk()
+    root.title("InvestKaro - Stock Market Simulator")
+    root.geometry("500x700")
+    root.configure(bg="white")
 
-def show_portfolio_window(user_email, sector):
-    users = load_users()
-    if user_email not in users:
-        messagebox.showerror("Error", "User not found.")
-        return
+    auth_manager = AuthManager(root)
 
-    user_data = users[user_email]
-    if sector == "auto":
-        portfolio_data = user_data.get("shares", {})
-        company_links = AUTO_COMPANIES
-        title = "🚗 Automobile Portfolio"
-        bg_color = "steelblue"
-        sector_img_path = "sectors/auto.png"
-    elif sector == "petroleum":
-        portfolio_data = user_data.get("petroleum_shares", {})
-        company_links = PETROLEUM_COMPANIES
-        title = "⛽ Petroleum Portfolio"
-        bg_color = "orange"
-        sector_img_path = "sectors/petro.png"
-    elif sector == "steel":
-        portfolio_data = user_data.get("steel_shares", {})
-        company_links = STEEL_COMPANIES
-        title = "🏭 Steel Portfolio"
-        bg_color = "lightgray"
-        sector_img_path = "sectors/steel1.png"
-    elif sector == "gold":
-        portfolio_data = user_data.get("gold_shares", {})
-        company_links = GOLD_COMPANIES
-        title = "🥇 Gold Portfolio"
-        bg_color = "gold"
-        sector_img_path = "sectors/gold.png"
-    else:
-        return
+    notebook = ttk.Notebook(root)
+    notebook.pack(pady=20, expand=True, fill="both", padx=20)
 
-    portfolio_win = tk.Toplevel()
-    portfolio_win.title(f"{user_data['name']}'s {title}")
-    portfolio_win.geometry("650x500")
-    portfolio_win.configure(bg="lime green")
+    # Signup tab
+    signup_frame = tk.Frame(notebook, bg="white")
+    notebook.add(signup_frame, text="Sign Up")
 
-    tk.Label(portfolio_win, text=title, font=("Arial", 16, "bold"), bg=bg_color, fg="black").pack(pady=10, fill="x")
+    tk.Label(signup_frame, text="Create New Account", font=("Arial", 18, "bold"), bg="white", fg="green").pack(pady=20)
+    tk.Label(signup_frame, text="Full Name:", font=("Arial", 12), bg="white").pack()
+    signup_name_entry = tk.Entry(signup_frame, font=("Arial", 12), width=25)
+    signup_name_entry.pack(pady=5)
+    tk.Label(signup_frame, text="Email Address:", font=("Arial", 12), bg="white").pack()
+    signup_email_entry = tk.Entry(signup_frame, font=("Arial", 12), width=25)
+    signup_email_entry.pack(pady=5)
+    tk.Label(signup_frame, text="Password:", font=("Arial", 12), bg="white").pack()
+    signup_password_entry = tk.Entry(signup_frame, font=("Arial", 12), show="*", width=25)
+    signup_password_entry.pack(pady=5)
 
-    try:
-        sector_img = load_image(sector_img_path, (100, 100))
-        tk.Label(portfolio_win, image=sector_img, bg="lime green").pack()
-        portfolio_win.sector_img_ref = sector_img
-    except:
-        tk.Label(portfolio_win, text="[Sector Image Missing]", bg="lime green", fg="red").pack()
+    def handle_signup():
+        success = auth_manager.signup_user(signup_name_entry.get().strip(), signup_email_entry.get().strip(), signup_password_entry.get())
+        if success:
+            signup_name_entry.delete(0, tk.END)
+            signup_email_entry.delete(0, tk.END)
+            signup_password_entry.delete(0, tk.END)
+            notebook.select(1)
 
-    frame = tk.Frame(portfolio_win, bg="white")
-    frame.pack(pady=20, padx=20, fill="both", expand=True)
+    tk.Button(signup_frame, text="Create Account", font=("Arial", 14, "bold"), bg="green", fg="white",
+              command=handle_signup, width=15).pack(pady=20)
 
-    headers = ["Company", "Shares", "Unit Price", "Total Value", "View Link"]
-    for i, header in enumerate(headers):
-        tk.Label(frame, text=header, font=("Arial", 12, "bold"), width=15, bg="lightgray", relief="ridge").grid(row=0, column=i, padx=1, pady=1)
+    # Login tab
+    login_frame = tk.Frame(notebook, bg="white")
+    notebook.add(login_frame, text="Login")
 
-    total_portfolio_value = 0
-    for i, (company, shares) in enumerate(portfolio_data.items(), start=1):
-        unit_price = PRICES.get(company, 0)
-        total_value = shares * unit_price
-        total_portfolio_value += total_value
+    tk.Label(login_frame, text="Welcome Back!", font=("Arial", 18, "bold"), bg="white", fg="blue").pack(pady=20)
+    tk.Label(login_frame, text="Email Address:", font=("Arial", 12), bg="white").pack()
+    login_email_entry = tk.Entry(login_frame, font=("Arial", 12), width=25)
+    login_email_entry.pack(pady=5)
+    tk.Label(login_frame, text="Password:", font=("Arial", 12), bg="white").pack()
+    login_password_entry = tk.Entry(login_frame, font=("Arial", 12), show="*", width=25)
+    login_password_entry.pack(pady=5)
 
-        tk.Label(frame, text=company, font=("Arial", 10), width=15, bg="yellow", relief="ridge").grid(row=i, column=0, padx=1, pady=1)
-        tk.Label(frame, text=str(shares), font=("Arial", 10), width=15, bg="yellow", relief="ridge").grid(row=i, column=1, padx=1, pady=1)
-        tk.Label(frame, text=f"₹{unit_price}", font=("Arial", 10), width=15, bg="yellow", relief="ridge").grid(row=i, column=2, padx=1, pady=1)
-        tk.Label(frame, text=f"₹{total_value}", font=("Arial", 10), width=15, bg="yellow", relief="ridge", fg="blue" if total_value > 0 else "gray").grid(row=i, column=3, padx=1, pady=1)
+    def handle_login():
+        user_email = auth_manager.signin_user(login_email_entry.get().strip(), login_password_entry.get())
+        if user_email:
+            login_email_entry.delete(0, tk.END)
+            login_password_entry.delete(0, tk.END)
+            buy_sell_window(user_email)
 
-        if company in company_links:
-            tk.Button(frame, text="View 📊", font=("Arial", 9), bg="blue", fg="white",
-                      command=lambda url=company_links[company]: open_link(url)).grid(row=i, column=4, padx=1, pady=1)
+    tk.Button(login_frame, text="Login", font=("Arial", 14, "bold"), bg="blue", fg="white",
+              command=handle_login, width=15).pack(pady=20)
 
-    tk.Label(portfolio_win, text=f"Total Portfolio Value: ₹{total_portfolio_value}", font=("Arial", 14, "bold"),
-              bg="yellow", fg="black").pack(pady=10, fill="x")
-
-# You can add the admin and main window code similarly as before...
+    return root
 
 if __name__ == "__main__":
     root = create_main_window()
