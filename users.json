@@ -1468,7 +1468,7 @@
     "ghode1@gmail.com": {
         "name": "ghode",
         "password": "fatherji",
-        "balance": 50.20355701010192,
+        "balance": 35.20355701010192,
         "shares": {
             "Honda": 0,
             "Hyundai": 0,
@@ -1479,7 +1479,7 @@
         },
         "petroleum_shares": {
             "Reliance Industries": 0,
-            "Indian Oil Corporation": 0,
+            "Indian Oil Corporation": 1,
             "Bharat Petroleum": 0,
             "Hindustan Petroleum": 0,
             "Oil India": 0
@@ -1501,7 +1501,8 @@
         "last_buy_price": {
             "Tata Motors": 10,
             "Mahindra & Mahindra": 10,
-            "JSW Steel": 20
+            "JSW Steel": 20,
+            "Indian Oil Corporation": 15
         },
         "bonus": 100,
         "created": "2025-10-14 21:03:10.381850"

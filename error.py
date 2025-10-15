@@ -169,7 +169,6 @@ class AuthManager:
         return email
 
 
-# Candlestick Trading Chart with invested money and profit/loss tracking
 def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", title="Trading Chart", balance_update_callback=None):
     ENTRY_PRICE = float(entry_price)
     SIDE = side.upper()
@@ -273,26 +272,25 @@ def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", t
             price_entry.delete(0, tk.END)
         except Exception:
             messagebox.showerror("Error", "Invalid price")
+
     def withdraw_all():
-                 users = load_users()
-    user_data = users.get(user_email)
-    if not user_data:
-        messagebox.showerror("Error", "User not found!")
-        return
-    if len(ohlc_data) == 0:
-        messagebox.showinfo("Withdraw", "No price data available.")
-        return
-    df = pd.DataFrame(ohlc_data, columns=["Open", "High", "Low", "Close"])
-    current_price = df.iloc[-1]['Close']
-    profit = (current_price - effective_entry_price) * shares_owned if SIDE == "BUY" else (effective_entry_price - current_price) * shares_owned
-    invested_amount = effective_entry_price * shares_owned
-    pct = (profit / invested_amount) * 100 if invested_amount > 0 else 0
-    if profit > 0:
-        user_data["balance"] += profit
-        save_users(users)
-        messagebox.showinfo("Withdraw", f"Profit ₹{profit:.2f} ({pct:.2f}%) withdrawn to your balance!")
-    else:
-        messagebox.showinfo("Withdraw", f"No profit to withdraw. Current P/L: ₹{profit:.2f} ({pct:.2f}%)")
+        latest_price = last_close
+        break_even_price = effective_entry_price
+        if SIDE == "BUY":
+            can_withdraw = latest_price >= break_even_price
+        else:
+            can_withdraw = latest_price <= break_even_price
+        if can_withdraw:
+            current_total = latest_price * shares_owned
+            user_data["balance"] += current_total
+            users[user_email] = user_data
+            save_users(users)
+            messagebox.showinfo("Success", f"₹{current_total:.2f} (Invested + profit) credited to your trading balance.")
+            withdraw_btn.config(state="disabled")
+            if balance_update_callback:
+                balance_update_callback(user_data["balance"])
+        else:
+            messagebox.showinfo("Info", "Current price not above invested amount, cannot withdraw yet.")
 
     stop_flag = [False]
 
@@ -315,10 +313,10 @@ def open_dummy_candlestick_chart(user_email, company, entry_price, side="BUY", t
     withdraw_btn = tk.Button(control_frame, text="Withdraw Profit", font=("Arial", 11, "bold"), bg="green", fg="white", command=withdraw_all)
     withdraw_btn.pack(side=tk.LEFT, padx=6)
 
-
     tk.Button(control_frame, text="Close Chart", font=("Arial", 11, "bold"), bg="red", fg="white", command=lambda: (stop_flag.__setitem__(0, True), chart_win.destroy())).pack(side=tk.RIGHT, padx=8)
 
     animation_loop()
+
 
 # Trading window
 def buy_sell_window(user_email):
